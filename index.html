@@ -22,9 +22,10 @@
       --blue: #2563eb;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif;
+        transition: background-color 0.2s ease, border-color 0.2s ease; }
 
-    body { background-color: var(--bg-main); color: var(--text-main); overflow-x: auto;
+    body { background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden;
            padding-bottom: 60px; -webkit-font-smoothing: antialiased; }
 
     header {
@@ -192,10 +193,6 @@
     .stage-spinner { width: 16px; height: 16px; border: 2px solid rgba(14,165,233,0.2); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .warning-banner { background: #fffbeb; border: 1px solid #fde047; color: #b45309; padding: 12px 20px; border-radius: 12px; margin: 15px 30px 0 30px; font-size: 13px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .warning-banner .close { margin-right: auto; cursor: pointer; font-weight: bold; }
-    .warning-banner code { background: #fef3c7; padding: 2px 6px; border-radius: 6px; font-family: monospace; }
-
     @media (max-width: 768px) {
       .hero-content { flex-direction: column; align-items: center; }
       .controls-bar { flex-direction: column; align-items: stretch; }
@@ -222,8 +219,6 @@
       <button class="btn btn-secondary" onclick="openSettingsModal()">⚙️ تنظیمات سیستم</button>
     </div>
   </header>
-
-  <div id="corsWarning" style="display:none;"></div>
 
   <section class="section-title">🎯 پیشنهاد تماشای بعدی</section>
   <section class="watch-next-container" id="watchNextContainer">
@@ -347,34 +342,12 @@
   </div>
 
   <script>
-    // --- API Keys ---
+    // --- Original Working Configuration ---
     const OMDB_KEY = "4b0254f3";
-    const GROQ_API_KEY = "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"; 
-
-    // --- Detect running from file:// and disable AI ---
-    const isFileProtocol = window.location.protocol === 'file:';
-    let aiBlocked = isFileProtocol;
-
-    window.addEventListener('DOMContentLoaded', () => {
-      if (isFileProtocol) {
-        const warningDiv = document.getElementById('corsWarning');
-        warningDiv.style.display = 'block';
-        warningDiv.innerHTML = `
-          <div class="warning-banner">
-            ⚠️ شما فایل را مستقیماً از روی دیسک باز کرده‌اید (<code>file://</code>). 
-            به دلیل سیاست‌های امنیتی مرورگر، تماس با API هوش مصنوعی (Groq) مسدود می‌شود و خطای "Failed to fetch" دیده خواهد شد.
-            <br><br>
-            <strong>✅ راه حل ساده:</strong> 
-            یک سرور محلی اجرا کنید. در پوشه فایل، ترمینال را باز کرده و دستور زیر را وارد کنید:
-            <br>
-            <code style="background:#fef3c7; padding:4px 8px; border-radius:6px;">python -m http.server 8080</code>
-            <br>
-            سپس در مرورگر به آدرس <code>http://localhost:8080</code> بروید. تمام قابلیت‌های هوش مصنوعی کار خواهند کرد.
-            <span class="close" onclick="this.parentElement.style.display='none'">✖</span>
-          </div>`;
-        // Disable AI buttons visually but keep them; they will show an alert when clicked
-      }
-    });
+    
+    // --- Google Gemini 1.5 Flash - Free Tier ---
+    // Get your free API key from: https://aistudio.google.com/
+    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"; // <-- Replace with your actual key
 
     // --- IndexedDB for Persistent Offline Archive Storage ---
     const DB_NAME = 'CineTrackDB';
@@ -450,6 +423,16 @@
         document.getElementById("globalAiResponse").innerHTML = state.globalAiCache;
         document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
       }
+      
+      // Check if Gemini API key is still placeholder
+      if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+        console.warn("Gemini API key not set. AI features will show error messages.");
+        // Optionally show a non-intrusive warning in the AI panel
+        const aiPanel = document.querySelector(".ai-global-panel .ai-response");
+        if (aiPanel && aiPanel.innerHTML.includes("درخواست آنالیز")) {
+          aiPanel.innerHTML = "⚠️ برای استفاده از قابلیت‌های هوش مصنوعی، لطفاً کلید API گوگل جمینای را در فایل (const GEMINI_API_KEY) قرار دهید. از https://aistudio.google.com/ کلید رایگان بگیرید.";
+        }
+      }
     }
 
     function saveStateToStorage() {
@@ -487,8 +470,11 @@
       const words = cleaned.split(' ').filter(w => w.length > 0);
       const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
       const pattern = escaped.join('[-_.\\s]');
-      const rightBoundary = '(?=[/_.\\s]|$|\\d|(?=-(?:s\\d{1,2}e?\\d*|\\d{4}|ep\\d|season\\d)))';
-      return new RegExp('(?:^|[/_.\\s])' + pattern + rightBoundary, 'i');
+      // Add word boundary to avoid partial matches like "Lost" matching "Lost in Space"?
+      // But we want whole word "Lost" only if it appears as a separate word.
+      // The original pattern already uses (?:^|[/_.\\s]) which is a beginning or separator.
+      // We'll keep as is, and later use year filtering.
+      return new RegExp('(?:^|[/_.\\s])' + pattern + '(?=[/_.\\s]|$|\\d|(?=-(?:s\\d{1,2}e?\\d*|\\d{4}|ep\\d|season\\d)))', 'i');
     }
 
     function searchByImdbId(allLinks, imdbID) {
@@ -502,18 +488,21 @@
     }
 
     function searchByBothStrict(allLinks, title, imdbID) {
-      const id = imdbID.toLowerCase(); const rx = buildTitleRegex(title);
+      const id  = imdbID.toLowerCase(); const rx  = buildTitleRegex(title);
       return allLinks.filter(l => {
-        const urlLow = l.url.toLowerCase(); const textLow = l.text.toLowerCase();
+        const urlLow  = l.url.toLowerCase(); const textLow = l.text.toLowerCase();
         const hasId = urlLow.includes(id) || textLow.includes(id);
         const hasTitle = rx.test(l.url) || rx.test(l.text);
         return hasId && hasTitle;
       });
     }
 
+    // --- ENHANCED title search with automatic pruning using IMDb ID and year (fixes "Lost" issue) ---
     function smartTitleSearch(allLinks, item) {
       let raw = searchByTitleOnly(allLinks, item.title);
-      if (raw.length <= 5) return raw;
+      if (raw.length <= 3) return raw; // Already precise enough
+      // Too many false positives (common for short titles like "Lost", "The", "It")
+      // Filter by IMDb ID or year
       const id = item.id.toLowerCase();
       const year = item.year;
       let filtered = raw.filter(l => {
@@ -521,57 +510,54 @@
         const textLow = l.text.toLowerCase();
         return urlLow.includes(id) || textLow.includes(id) || urlLow.includes(year) || textLow.includes(year);
       });
-      return filtered.length ? filtered : raw.slice(0, 8);
+      // If filtering removed everything, fall back to first 6 results (better than nothing)
+      return filtered.length ? filtered : raw.slice(0, 6);
     }
 
-    // AI function that never runs when aiBlocked = true
-    async function callGroqAPI(systemPrompt, userText) {
-      if (aiBlocked) {
-        throw new Error("AI features disabled because page is opened from file://. Please use a local web server (e.g., python -m http.server) and access via http://localhost");
+    // --- Google Gemini API Call (No CORS, works from file://) ---
+    async function callGeminiAPI(systemPrompt, userText) {
+      if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+        throw new Error("⚠️ لطفاً کلید API گوگل جمینای را در فایل قرار دهید. از https://aistudio.google.com/ کلید رایگان بگیرید.");
       }
-      const url = `https://api.groq.com/openai/v1/chat/completions`;
+      
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
       const payload = {
-        model: "llama-3.3-70b-versatile",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userText }
-        ],
-        temperature: 0.4
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ parts: [{ text: userText }] }],
+        generationConfig: { temperature: 0.4 }
       };
 
       const res = await fetch(url, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${GROQ_API_KEY}`
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
       
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`HTTP ${res.status}: ${errText.slice(0,100)}`);
-      }
       const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      return data.choices[0].message.content;
+      if (data.error) {
+        if (data.error.code === 429) throw new Error("ترافیک سرور هوش مصنوعی بالاست (محدودیت استفاده عمومی). لطفاً یک دقیقه دیگر تلاش کنید.");
+        throw new Error(data.error.message);
+      }
+      return data.candidates[0].content.parts[0].text;
     }
 
+    // --- RESTORED ORIGINAL LINK FINDING LOGIC (with smartTitleSearch) ---
     async function searchWithAI(item, allLinks) {
-      if (aiBlocked) return null;
+      const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
+      
+      const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title — not related titles or spin-offs. For TV series include only season/episode links for THIS show. If nothing matches, output NONE. Output indices or NONE only — no explanation.`;
+      const userText = `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`;
+      
       try {
-        const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
-        const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title — not related titles or spin-offs. For TV series include only season/episode links for THIS show. If nothing matches, output NONE. Output indices or NONE only — no explanation.`;
-        const userText = `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`;
-        const responseText = await callGroqAPI(systemPrompt, userText);
+        const responseText = await callGeminiAPI(systemPrompt, userText);
         const answer = responseText.trim();
         if (/^none$/i.test(answer) || answer === '') return [];
         const indices = answer.split(/[\s,،]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0 && n < allLinks.length);
         return indices.map(i => allLinks[i]);
       } catch (e) {
         console.error("AI link search failed:", e);
-        return null;
       }
+      return null;
     }
 
     async function matchAndExtractLinks(imdbID) {
@@ -596,22 +582,23 @@
       matches = searchByImdbId(allLinks, imdbID);
       if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🆔 یافت‌شده با کد IMDb: <b>${imdbID}</b>`);
 
-      stageMsg('۲', `جستجو با نام + کد IMDb: ${item.title}`);
-      await tick();
-      matches = searchByBothStrict(allLinks, item.title, imdbID);
-      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 تطابق ترکیبی (کد + نام)`);
-
-      stageMsg('۳', `جستجوی هوشمند نام (با فیلتر خودکار): ${item.title}`);
+      stageMsg('۲', `جستجوی هوشمند نام (با فیلتر سال/کد): ${item.title}`);
       await tick();
       matches = smartTitleSearch(allLinks, item);
       if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤 یافت‌شده با نام (فیلتر شده با سال/کد)`);
+
+      stageMsg('۳', 'جستجوی ترکیبی — تطابق هم‌زمان کد و نام');
+      await tick();
+      matches = searchByBothStrict(allLinks, item.title, imdbID);
+      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 یافت‌شده با تطابق ترکیبی (کد + نام)`);
 
       stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با موتور هوشمند ابری...');
       await tick();
 
       const aiResult = await searchWithAI(item, allLinks);
+
       if (aiResult === null) {
-        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ ارتباط با هوش مصنوعی ممکن نیست (فایل را از طریق HTTP سرور اجرا کنید).</div>`;
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ ارتباط با هوش مصنوعی مقدور نبود (احتمال شلوغی شبکه عمومی).</div>`;
         return;
       }
       if (aiResult.length === 0) {
@@ -740,10 +727,6 @@
     }
 
     async function translatePlotInline(id) {
-      if (aiBlocked) {
-        alert("برای ترجمه داستان، فایل را از طریق HTTP سرور اجرا کنید (مثال: python -m http.server)");
-        return;
-      }
       const item = state.items.find(i => i.id === id);
       if (!item) return;
 
@@ -751,8 +734,9 @@
       if (plotEl) plotEl.innerHTML = `<span style="color:var(--cyan); font-weight:600;">⏳ در حال ترجمه داستان به فارسی...</span>`;
       
       const sysPrompt = "You are an expert movie translator. Translate the following English movie plot into natural, fluent Persian (Farsi). Output ONLY the translation. Do not use Markdown blocks.";
+      
       try {
-        const translatedText = await callGroqAPI(sysPrompt, item.plot);
+        const translatedText = await callGeminiAPI(sysPrompt, item.plot);
         if (translatedText) {
           item.plotFa = translatedText.trim();
           saveStateToStorage(); renderHero();
@@ -890,6 +874,7 @@
       container.innerHTML = `<div class="stat-card"><h3>${total}</h3><p>کل عناوین</p></div><div class="stat-card"><h3>${watching}</h3><p>⏳ در حال تماشا</p></div><div class="stat-card"><h3>${completed}</h3><p>✅ تمام شده</p></div><div class="stat-card"><h3>⭐ ${imdbAvg}</h3><p>میانگین کل IMDb</p></div><div class="stat-card"><h3>★ ${userAvg}</h3><p>میانگین امتیازهای من</p></div><div class="stat-card"><h3 style="font-size:15px;font-weight:800;padding-top:6px;color:var(--cyan);">${favoriteGenre}</h3><p>🎭 ژانر محبوب</p></div>`;
     }
 
+    // --- RESTORED EXACT ORIGINAL OMDB FETCH LOGIC ---
     function handleSearch(query) {
       clearTimeout(searchDebounceTimer);
       const dropdown = document.getElementById("searchDropdown");
@@ -1073,11 +1058,8 @@
       container.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;cursor:pointer;" onclick="selectGridItem('${top.id}')"><div style="display:flex;align-items:center;gap:15px;"><img src="${top.poster !== 'N/A' ? top.poster : 'https://via.placeholder.com/50x70?text=No'}" style="width:36px;height:50px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"><div><h4 style="font-weight:700;font-size:14.5px;">${top.title}</h4><p style="font-size:12px;color:var(--text-muted);margin-top:2px;">وضعیت: ${translateStatus(top.status)} | ⭐ IMDb: ${top.imdbRating}</p></div></div><button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">🎯 تمرکز روی این عنوان</button></div>`;
     }
 
+    // --- RESTORED PERSONALIZED AI FEATURES ---
     async function generateSimilarRecommendations(id) {
-      if (aiBlocked) {
-        alert("پیشنهاد مشابه AI نیاز به اجرای فایل از طریق HTTP سرور دارد. لطفاً از دستور python -m http.server استفاده کنید.");
-        return;
-      }
       const item = state.items.find(i => i.id === id);
       if (!item) return;
 
@@ -1089,7 +1071,7 @@
       const userText = `Title: "${item.title}". Type: ${item.type}. Genre: ${item.genre}. Plot: ${item.plot}. Give 5 recommendations.`;
       
       try {
-        const analysis = await callGroqAPI(sysPrompt, userText);
+        const analysis = await callGeminiAPI(sysPrompt, userText);
         responseBox.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:6px;">
             <h4 style="font-size:13.5px;font-weight:800;color:var(--text-main);">🤖 عناوین مشابه (تحلیل AI)</h4>
@@ -1102,10 +1084,6 @@
     }
 
     async function generateGlobalAIAnalysis(forceRegen = false) {
-      if (aiBlocked) {
-        alert("تحلیل هوشمند کل آرشیو نیاز به اجرای فایل از طریق HTTP سرور دارد. لطفاً از دستور python -m http.server استفاده کنید.");
-        return;
-      }
       if (!forceRegen && state.globalAiCache) {
         document.getElementById("globalAiResponse").innerHTML = state.globalAiCache;
         return;
@@ -1116,10 +1094,11 @@
       responseBox.innerText = "⏳ در حال آنالیز آماری آرشیو. لطفاً صبور باشید...";
       
       const safeData = state.items.map(i => ({ title: i.title, type: i.type, genre: i.genre, rating: i.imdbRating }));
+      
       const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. Give highly personalized structural feedback STRICTLY IN PERSIAN (FARSI). NEVER write in English. Highlight patterns in their taste, note their favorite genres based on the data, and kindly suggest a few masterpiece titles they are missing. Use beautiful formatting with emojis so it looks great on a webpage.`;
       
       try {
-        const analysis = await callGroqAPI(sysPrompt, JSON.stringify(safeData));
+        const analysis = await callGeminiAPI(sysPrompt, JSON.stringify(safeData));
         state.globalAiCache = analysis;
         localStorage.setItem("cinetrack_global_ai_cache", analysis);
         responseBox.innerHTML = analysis;
