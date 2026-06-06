@@ -856,38 +856,51 @@ async function callGroqAPI(systemPrompt, userText) {
     function handleSearch(query) {
     const dropdown = document.getElementById("searchDropdown");
     
-    if (!query || query.trim().length < 2) {
+    // 1. Safety Check: If search is empty, hide dropdown
+    if (!query || query.trim().length === 0) {
         dropdown.style.display = "none";
-        dropdown.innerHTML = "";
         return;
     }
 
     const q = query.toLowerCase().trim();
 
-    // FILTER LOGIC:
-    // It checks if your query is an ID OR if it is a title match.
-    // This allows you to search by "Lost" (title) or "tt0413573" (ID).
+    // 2. The Universal Filter
     const results = state.items.filter(item => {
-        const titleMatch = item.title && item.title.toLowerCase().includes(q);
-        const idMatch = item.imdbID && item.imdbID.toLowerCase() === q; // Strict ID match
-        
-        return titleMatch || idMatch;
+        try {
+            // We use || to check for different possible naming conventions in your data
+            const title = (item.title || item.Title || item.name || "").toString().toLowerCase();
+            const imdb = (item.imdbID || item.imdb_id || item.id || "").toString().toLowerCase();
+            
+            // Return true if title matches OR id matches
+            return title.includes(q) || imdb === q;
+        } catch (e) {
+            console.error("Error processing item:", item);
+            return false;
+        }
     });
 
+    // 3. Render Results
     if (results.length > 0) {
         dropdown.style.display = "block";
-        dropdown.innerHTML = results.map(item => `
-            <div class="search-item" onclick="selectMovie('${item.id}')">
-                <img src="${item.poster || 'placeholder.jpg'}" onerror="this.src='placeholder.jpg'">
-                <div class="info">
-                    <h4>${item.title} (${item.year || ''})</h4>
-                    <p>${item.imdbID ? 'ID: ' + item.imdbID : 'No ID available'}</p>
+        dropdown.innerHTML = results.map(item => {
+            // Using logical OR to find images/titles safely
+            const displayTitle = item.title || item.Title || "Unknown Title";
+            const displayPoster = item.poster || item.Poster || 'placeholder.jpg';
+            const displayID = item.imdbID || item.imdb_id || item.id || "No ID";
+            
+            return `
+                <div class="search-item" onclick="selectMovie('${item.id}')">
+                    <img src="${displayPoster}" onerror="this.src='placeholder.jpg'">
+                    <div class="info">
+                        <h4>${displayTitle}</h4>
+                        <p>${displayID}</p>
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     } else {
+        // If no results, show nothing
         dropdown.style.display = "none";
-        dropdown.innerHTML = "";
     }
 }
 
