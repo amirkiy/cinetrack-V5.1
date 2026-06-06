@@ -2,8 +2,8 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>CineTrack AI Ultimate + Avalai Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineTrack AI Ultimate Edition</title>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -22,302 +22,1101 @@
       --blue: #2563eb;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif;
+        transition: background-color 0.2s ease, border-color 0.2s ease; }
 
-    body { background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden; padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
+    body { background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden;
+           padding-bottom: 60px; -webkit-font-smoothing: antialiased; }
 
-    /* header, cards, same as previous but enhanced */
-    header { background: var(--bg-surface); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); flex-wrap: wrap; gap: 15px; }
-    .brand { font-size: 22px; font-weight: 900; color: var(--accent); letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 15px 30px; display: flex; justify-content: space-between;
+      align-items: center; position: sticky; top: 0; z-index: 100;
+      box-shadow: var(--shadow); flex-wrap: wrap; gap: 15px;
+    }
+
+    .brand { font-size: 22px; font-weight: 900; color: var(--accent); letter-spacing: -0.5px;
+             display: flex; align-items: center; gap: 8px; }
+
     .search-container { position: relative; width: 35%; max-width: 500px; min-width: 250px; }
-    .search-wrapper { display: flex; align-items: center; background: #f1f5f9; border: 1px solid var(--border); border-radius: 12px; padding: 2px 15px; }
-    .search-wrapper input { flex: 1; background: transparent; border: none; color: var(--text-main); padding: 10px; font-size: 14px; outline: none; }
-    .search-wrapper button { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding-left: 5px; }
-    .search-dropdown { position: absolute; top: 110%; left: 0; right: 0; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; max-height: 400px; overflow-y: auto; z-index: 200; box-shadow: var(--shadow-lg); display: none; }
+
+    .search-wrapper { display: flex; align-items: center; background: #f1f5f9; border: 1px solid var(--border); border-radius: 12px;
+                      padding: 2px 15px; }
+    .search-wrapper input { flex: 1; background: transparent; border: none; color: var(--text-main); padding: 10px;
+                            font-size: 14px; outline: none; }
+    .search-wrapper button { background: transparent; border: none; color: var(--text-muted); cursor: pointer;
+                             font-size: 14px; padding-left: 5px; }
+
+    .search-dropdown { position: absolute; top: 110%; left: 0; right: 0; background: var(--bg-surface);
+                       border: 1px solid var(--border); border-radius: 12px; max-height: 400px; overflow-y: auto; z-index: 200; box-shadow: var(--shadow-lg); display: none; }
+
+    .search-item { display: flex; gap: 15px; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; align-items: center; }
+    .search-item:hover { background: #f8fafc; }
+    .search-item img { width: 40px; height: 58px; object-fit: cover; border-radius: 6px; background: #e2e8f0; }
+    .search-item .info h4 { font-size: 14px; margin-bottom: 2px; color: var(--text-main); font-weight: 700; }
+    .search-item .info p { font-size: 12px; color: var(--text-muted); }
+
     .nav-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn { background: var(--accent); color: white; border: none; padding: 9px 18px; border-radius: 10px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+
+    .btn { background: var(--accent); color: white; border: none; padding: 9px 18px; border-radius: 10px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
+           font-size: 13px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
     .btn:hover { background: var(--accent-hover); }
     .btn-secondary { background: #ffffff; border: 1px solid var(--border); color: var(--text-main); }
-    .btn-secondary:hover { background: #f1f5f9; }
+    .btn-secondary:hover { background: #f1f5f9; border-color: #cbd5e1; }
+    .btn-delete { background: #ef4444; color: white; }
+    .btn-delete:hover { background: #dc2626; }
+    .btn-stream { background: var(--green) !important; color: white !important; }
+    .btn-stream:hover { background: #059669 !important; }
+    .btn-stream-next { background: var(--blue) !important; color: white !important; }
+    .btn-stream-next:hover { background: #1d4ed8 !important; }
 
-    /* AI Chat Floating Button & Widget */
-    .chat-float-btn {
-      position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px;
-      background: linear-gradient(135deg, var(--cyan), var(--blue));
-      border-radius: 32px; box-shadow: 0 8px 20px rgba(14,165,233,0.4);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; z-index: 400; transition: transform 0.2s;
-      border: none; color: white; font-size: 28px;
-    }
-    .chat-float-btn:hover { transform: scale(1.05); background: var(--blue); }
-    .chat-widget {
-      position: fixed; bottom: 90px; right: 24px; width: 380px; max-width: calc(100vw - 40px);
-      background: var(--bg-surface); border-radius: 24px; box-shadow: var(--shadow-lg);
-      border: 1px solid var(--border); z-index: 401; display: none; flex-direction: column;
-      overflow: hidden; backdrop-filter: blur(0px); transition: all 0.2s;
-      direction: rtl; font-family: 'Vazirmatn', sans-serif;
-    }
-    .chat-widget.open { display: flex; }
-    .chat-header { background: var(--cyan); padding: 12px 18px; color: white; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
-    .chat-header button { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
-    .chat-messages { height: 380px; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; background: #fefefe; }
-    .chat-message { max-width: 85%; padding: 8px 12px; border-radius: 18px; font-size: 13px; line-height: 1.5; word-break: break-word; }
-    .user-msg { background: var(--cyan); color: white; align-self: flex-end; border-bottom-left-radius: 6px; }
-    .ai-msg { background: #f1f5f9; color: var(--text-main); align-self: flex-start; border-bottom-right-radius: 6px; border: 1px solid var(--border); }
-    .chat-input-area { display: flex; padding: 12px; gap: 10px; border-top: 1px solid var(--border); background: white; }
-    .chat-input-area input { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 40px; outline: none; font-size: 13px; }
-    .chat-input-area button { background: var(--cyan); border: none; border-radius: 40px; padding: 0 16px; color: white; font-weight: bold; cursor: pointer; }
-    .typing-indicator { font-size: 12px; color: var(--text-muted); padding: 6px 12px; background: #eef2ff; border-radius: 20px; width: fit-content; }
+    .hero-section { margin: 30px; background: var(--bg-surface); border-radius: 16px; padding: 30px; border: 1px solid var(--border); position: relative; min-height: 250px; display: flex; align-items: center; box-shadow: var(--shadow); }
 
-    /* rest of original styles compact but keep grid and hero */
-    .hero-section, .dashboard-stats, .main-grid, .ai-global-panel, .controls-bar, .watch-next-container, .backup-section { margin: 0 30px 25px 30px; }
-    .hero-section { background: var(--bg-surface); border-radius: 16px; padding: 30px; border: 1px solid var(--border); }
-    .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
-    .stat-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 15px; text-align: center; }
-    .main-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
-    .movie-card { background: var(--bg-surface); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; transition: 0.1s; }
+    .hero-empty { text-align: center; width: 100%; color: var(--text-muted); font-size: 16px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+    .hero-content { display: flex; gap: 35px; width: 100%; align-items: flex-start; }
+
+    .hero-poster { width: 220px; height: 320px; object-fit: cover; border-radius: 12px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
+
+    .hero-details { flex: 1; }
+
+    .hero-title { font-size: 28px; font-weight: 800; margin-bottom: 12px; color: var(--text-main); }
+
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; font-size: 13px; }
+
+    .badge { background: #f1f5f9; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--text-muted); border: 1px solid var(--border); }
+    .badge-status { background: rgba(229, 9, 20, 0.08); color: var(--accent); border-color: rgba(229, 9, 20, 0.15); }
+
+    .hero-extended-info { background: #f8fafc; padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+    .extended-row { font-size: 13px; line-height: 1.5; color: var(--text-main); }
+    .extended-row strong { color: var(--text-muted); font-weight: 600; display: inline-block; width: 110px; }
+
+    .hero-plot { font-size: 14.5px; line-height: 1.75; color: #334155; margin-bottom: 25px; }
+
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 25px; border-top: 1px solid var(--border); padding-top: 20px; }
+
+    .episode-progress-block { background: rgba(14, 165, 233, 0.04); border: 1px solid rgba(14, 165, 233, 0.15); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+    .episode-progress-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .episode-progress-title { font-size: 14px; font-weight: 700; color: var(--cyan); }
+    .episode-progress-count { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+
+    .progress-container { width: 100%; background: #e2e8f0; border-radius: 10px; height: 6px; overflow: hidden; }
+    .progress-bar { height: 100%; background: var(--cyan); width: 0%; border-radius: 10px; transition: width 0.5s ease-in-out; }
+
+    .audio-review-block { background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%); border: 1.5px solid rgba(14, 165, 233, 0.2); border-radius: 16px; padding: 18px; margin-top: 20px; box-shadow: 0 2px 12px rgba(14, 165, 233, 0.06); position: relative; }
+    .audio-review-block::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--cyan), var(--blue)); border-radius: 16px 16px 0 0; }
+    .audio-controls { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center; }
+    .review-textarea { width: 100%; min-height: 90px; resize: vertical; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: 1.5px solid rgba(14, 165, 233, 0.15); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; line-height: 1.7; color: var(--text-main); font-family: 'Vazirmatn', sans-serif; outline: none; transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box; }
+    .review-textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
+    .review-textarea::placeholder { color: #94a3b8; }
+    .voice-rec-btn { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border: 1.5px solid var(--border); color: var(--text-main); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .voice-rec-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .voice-rec-btn.recording { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; color: #b45309; animation: pulse-rec 1.2s infinite; }
+    @keyframes pulse-rec { 0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); } }
+
+    .dashboard-stats { margin: 0 30px 30px 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; }
+
+    .stat-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 15px; text-align: center; box-shadow: var(--shadow); }
+    .stat-card h3 { font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+    .stat-card p { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+    .section-title { margin: 25px 30px 12px 30px; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+
+    .watch-next-container { margin: 0 30px 30px 30px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+
+    .controls-bar { margin: 0 30px 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+
+    .filters-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .filter-btn { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 10px; cursor: pointer; font-size: 12.5px; font-weight: 600; }
+    .filter-btn:hover { background: #f1f5f9; }
+    .filter-btn.active { background: var(--text-main); color: #fff; border-color: var(--text-main); }
+
+    select.sort-select, select.form-control, input.form-control { background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; outline: none; font-size: 13px; font-weight: 600; width: 100%; box-sizing: border-box;}
+    select.sort-select:hover, input.form-control:focus { border-color: #cbd5e1; }
+
+    .main-grid { margin: 0 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
+
+    .movie-card { background: var(--bg-surface); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); position: relative; cursor: pointer; box-shadow: var(--shadow); }
+    .movie-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .movie-card.selected { border-color: var(--text-main); border-width: 2px; }
+
     .card-poster-wrapper { position: relative; width: 100%; height: 250px; background: #e2e8f0; }
     .card-poster-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-    .btn-stream, .btn-stream-next { background: var(--green) !important; }
-    .filter-btn { background: var(--bg-surface); border: 1px solid var(--border); padding: 6px 14px; border-radius: 10px; cursor: pointer; }
-    .filter-btn.active { background: var(--text-main); color: #fff; }
+
+    .card-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; opacity: 0; padding: 15px; text-align: center; color: white; }
+    .movie-card:hover .card-overlay { opacity: 1; }
+
+    .card-info { padding: 12px; }
+    .card-title { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; color: var(--text-main); }
+    .card-meta-line { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500; }
+    .card-progress { background: rgba(14, 165, 233, 0.08); border-radius: 6px; padding: 3px 6px; font-size: 11px; color: var(--cyan); font-weight: 700; text-align: center; margin-top: 6px; }
+
+    .ai-global-panel { margin: 40px 30px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 25px; box-shadow: var(--shadow); }
+    .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; flex-wrap: wrap; gap: 15px; }
+    .ai-response { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid var(--border); min-height: 100px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; color: #334155; }
+
+    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(4px); z-index: 300; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; }
+    .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+
+    .modal-box { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; width: 90%; max-width: 580px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); padding: 25px; color: var(--text-main); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
+    
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+
+    .stars-rating { display: flex; gap: 4px; font-size: 22px; cursor: pointer; color: #cbd5e1; user-select: none; }
     .stars-rating span.active { color: #ffb020; }
-    .modal-backdrop { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(15,23,42,0.3); backdrop-filter: blur(4px); z-index:300; display: flex; align-items: center; justify-content: center; opacity:0; pointer-events: none; transition: 0.2s; }
-    .modal-backdrop.active { opacity:1; pointer-events: auto; }
-    .modal-box { background: var(--bg-surface); border-radius: 20px; width: 90%; max-width: 550px; padding: 24px; }
-    @media (max-width: 650px) { .chat-widget { width: 320px; right: 16px; bottom: 80px; } .hero-content { flex-direction: column; } }
+
+    .backup-section { margin: 25px 30px; display: flex; gap: 10px; }
+    .watch-next-badge { display: inline-block; background: rgba(14, 165, 233, 0.08); color: var(--cyan); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 700; margin-top: 5px; }
+
+    .quality-section-wrapper { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
+    .quality-block-title { font-size: 14.5px; font-weight: 800; padding-bottom: 4px; border-bottom: 2px solid var(--border); margin-bottom: 8px; }
+    .quality-block-title.softsub { color: var(--blue); border-bottom-color: rgba(37, 99, 235, 0.2); }
+    .quality-block-title.dubbed { color: var(--green); border-bottom-color: rgba(16, 185, 129, 0.2); }
+    
+    .movie-quality-line { display: block; font-size: 13.5px; padding: 8px 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); text-decoration: none; font-weight: 500; margin-bottom: 6px; }
+    .movie-quality-line:hover { background: #f1f5f9; border-color: #cbd5e1; }
+    
+    .series-season-container { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+    .series-season-title { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+    .series-qualities-row { font-size: 13.5px; font-weight: 600; line-height: 1.6; color: var(--text-main); }
+    .series-qualities-row a { color: var(--cyan); text-decoration: none; }
+    .series-qualities-row a:hover { text-decoration: underline; }
+
+    .stage-indicator { display: flex; align-items: center; gap: 10px; padding: 12px 15px; background: #f0f9ff; border: 1px solid rgba(14,165,233,0.2); border-radius: 10px; font-size: 13px; color: var(--cyan); font-weight: 600; }
+    .stage-spinner { width: 16px; height: 16px; border: 2px solid rgba(14,165,233,0.2); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      .hero-content { flex-direction: column; align-items: center; }
+      .controls-bar { flex-direction: column; align-items: stretch; }
+      header { justify-content: center; }
+      .search-container { width: 100%; }
+    }
   </style>
 </head>
 <body>
 
-<header>…</header>
-<!-- simplified header rewritten with same functionality but keeping original brand -->
-<div class="brand" style="padding-right:15px;">🎬 CineTrack AI <span style="font-size:11px; background:var(--text-main); color:#fff; padding:2px 8px; border-radius:6px;">ULTIMATE+AI CHAT</span></div>
-<div class="search-container">…</div>
-<div class="nav-actions">…</div>
+  <header>
+    <div class="brand">🎬 CineTrack AI <span style="font-size:11px; background:var(--text-main); color:#fff; padding:2px 8px; border-radius:6px; margin-right:5px;">ULTIMATE</span></div>
 
-<!-- rest of skeleton: main content will be dynamically generated same as before -->
-<section class="section-title">🎯 پیشنهاد تماشای بعدی</section>
-<section class="watch-next-container" id="watchNextContainer"></section>
-<section class="hero-section" id="heroSection"></section>
-<section class="section-title">📊 داشبورد</section>
-<section class="dashboard-stats" id="dashboardStats"></section>
-<div class="controls-bar" id="filterBarPlaceholder"></div>
-<main class="main-grid" id="mainGrid"></main>
-<section class="backup-section"><button class="btn btn-secondary" onclick="exportLibrary()">📤 خروجی بکاپ</button><button class="btn btn-secondary" onclick="document.getElementById('importFileInput').click()">📥 بارگذاری بکاپ</button><input type="file" id="importFileInput" style="display:none;" accept=".json" onchange="importLibrary(event)"></section>
-<section class="ai-global-panel"><div class="ai-header"><div><h3>🧠 تحلیل هوشمند کل کتابخانه</h3></div><button class="btn" onclick="generateGlobalAIAnalysis(false)">💡 آنالیز کل آرشیو</button></div><div class="ai-response" id="globalAiResponse"></div></section>
+    <div class="search-container">
+      <div class="search-wrapper">
+        <input type="text" id="searchInput" placeholder="جستجوی فیلم یا سریال انگلیسی..." oninput="handleSearch(this.value)">
+        <button onclick="clearSearchInput()">✖</button>
+      </div>
+      <div id="searchDropdown" class="search-dropdown"></div>
+    </div>
 
-<!-- MODALS (add, progress, notes, settings) -->
-<div class="modal-backdrop" id="addModal"><div class="modal-box"><div class="modal-header"><h3>اضافه کردن به آرشیو</h3><button onclick="closeModal('addModal')">✖</button></div><div id="addModalContent"></div></div></div>
-<div class="modal-backdrop" id="progressModal"><div class="modal-box"><div id="progressModalContent"></div></div></div>
-<div class="modal-backdrop" id="notesModal"><div class="modal-box"><textarea id="generalNotesTextArea" rows="8" style="width:100%" placeholder="یادداشت‌های شما..."></textarea><button onclick="closeModal('notesModal')">بستن</button></div></div>
-<div class="modal-backdrop" id="settingsModal"><div class="modal-box"><h3>تنظیمات</h3><select id="uiLanguageSetting"><option value="en">English</option><option value="fa">فارسی</option></select><input type="file" id="archiveHtmlFileInput" accept=".html" onchange="handleArchiveHtmlUpload(event)"><button onclick="saveSettings()">ذخیره</button></div></div>
+    <div class="nav-actions">
+      <button class="btn btn-secondary" onclick="openNotesModal()">📝 یادداشت‌ها</button>
+      <button class="btn btn-secondary" onclick="openSettingsModal()">⚙️ تنظیمات سیستم</button>
+    </div>
+  </header>
 
-<!-- Floating AI Chat Button + Widget -->
-<div class="chat-float-btn" id="chatFloatBtn">💬</div>
-<div class="chat-widget" id="chatWidget">
-  <div class="chat-header">🤖 دستیار سینمایی Avalai <button id="closeChatBtn">✖</button></div>
-  <div class="chat-messages" id="chatMessages"><div class="ai-msg chat-message">سلام! من دستیار هوشمند فیلم و سریال هستم. می‌توانم درباره فیلم‌ها، کتابخانه شما، اطلاعات IMDb و هر سوال سینمایی کمک کنم. بپرسید!</div></div>
-  <div class="chat-input-area"><input type="text" id="chatInput" placeholder="سوال خود را بپرسید..."><button id="sendChatBtn">ارسال</button></div>
-</div>
+  <section class="section-title">🎯 پیشنهاد تماشای بعدی</section>
+  <section class="watch-next-container" id="watchNextContainer">
+    <p style="color:var(--text-muted); font-size:13px;">در حال ارزیابی الگوها و استخراج اولویت تماشا...</p>
+  </section>
 
-<script>
-  // ----------------------------- AVALAI API CONFIGURATION ---------------------------------
-  const AVALAI_API_KEY = "aa-BoDE4elEsyeS4ydxyyV1TJgkltS70BizRv8hI5numtKA72Gq";
-  const AVALAI_ENDPOINT = "https://api.avalai.ir/v1/chat/completions";
-  const OMDB_KEY = "4b0254f3";
+  <section class="hero-section" id="heroSection"></section>
 
-  // Core state and DB identical to original but fully functional
-  let state = {
-    items: JSON.parse(localStorage.getItem("cinetrack_ultimate_db") || "[]"),
-    selectedId: null,
-    filters: { status: 'all', type: 'all', special: 'all', genre: 'all' },
-    sortBy: 'dateAdded',
-    omdbCache: JSON.parse(localStorage.getItem("cinetrack_omdb_cache") || "{}"),
-    globalAiCache: localStorage.getItem("cinetrack_global_ai_cache") || "",
-    archiveHtmlSource: "",
-    audioReviews: JSON.parse(localStorage.getItem("cinetrack_audio_reviews") || "{}"),
-    uiLanguage: localStorage.getItem("cinetrack_ui_lang") || "en"
-  };
-  let searchDebounceTimer, currentSearchResults = [];
-  
-  // IndexedDB for archive
-  const DB_NAME = 'CineTrackDB', DB_VERSION = 1, STORE_NAME = 'archives';
-  function initDB() { return new Promise((resolve, reject) => { const req = indexedDB.open(DB_NAME, DB_VERSION); req.onupgradeneeded = (e) => { if (!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME); }; req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error); }); }
-  async function saveArchiveToDB(text) { const db = await initDB(); const tx = db.transaction(STORE_NAME, 'readwrite'); tx.objectStore(STORE_NAME).put(text, 'archiveHtml'); return new Promise(r => { tx.oncomplete = r; }); }
-  async function loadArchiveFromDB() { const db = await initDB(); const req = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).get('archiveHtml'); return new Promise(r => { req.onsuccess = () => r(req.result || ""); req.onerror = () => r(""); }); }
-  
-  // ----------------------------- UNIFIED AI CALL USING AVALAI -----------------------------
-  async function callAvalaiAPI(systemPrompt, userMessage, temperature = 0.4) {
-    if (!AVALAI_API_KEY || AVALAI_API_KEY === "aa-BoDE4elEsyeS4ydxyyV1TJgkltS70BizRv8hI5numtKA72Gq") {
-      // Key exists but we must ensure it's valid
+  <section class="section-title">📊 داشبورد وضعیت و آمار کتابخانه</section>
+  <section class="dashboard-stats" id="dashboardStats"></section>
+
+  <section class="controls-bar">
+    <div class="filters-group" id="filterContainer">
+      <button class="filter-btn active" onclick="setFilter('status', 'all')">همه</button>
+      <button class="filter-btn" onclick="setFilter('status', 'Watching')">⏳ در حال تماشا</button>
+      <button class="filter-btn" onclick="setFilter('status', 'Planned')">📅 برنامه‌ریزی شده</button>
+      <button class="filter-btn" onclick="setFilter('status', 'Completed')">✅ تمام شده</button>
+      <button class="filter-btn" onclick="setFilter('type', 'movie')">🎬 فیلم‌ها</button>
+      <button class="filter-btn" onclick="setFilter('type', 'series')">📺 سریال‌ها</button>
+      <button class="filter-btn" onclick="setFilter('special', 'highRated')">⭐ IMDb 8+</button>
+      <button class="filter-btn" onclick="setFilter('special', 'personalTop')">🏆 محبوب‌های من</button>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <select class="sort-select" id="genreFilterSelect" onchange="handleGenreChange(this.value)">
+        <option value="all">فیلتر ژانر (همه)</option>
+      </select>
+      <select class="sort-select" id="sortSelect" onchange="handleSortChange(this.value)">
+        <option value="dateAdded">تاریخ اضافه شدن (جدیدترین)</option>
+        <option value="title">عنوان (الفبا)</option>
+        <option value="imdb">امتیاز IMDb</option>
+        <option value="year">سال ساخت</option>
+        <option value="userRating">امتیاز من</option>
+      </select>
+    </div>
+  </section>
+
+  <main class="main-grid" id="mainGrid"></main>
+
+  <section class="backup-section">
+    <button class="btn btn-secondary" onclick="exportLibrary()">📤 خروجی بکاپ (Export)</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('importFileInput').click()">📥 بارگذاری بکاپ (Import)</button>
+    <input type="file" id="importFileInput" style="display:none;" accept=".json" onchange="importLibrary(event)">
+  </section>
+
+  <section class="ai-global-panel">
+    <div class="ai-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:22px;">🧠</span>
+        <div>
+          <h3 style="font-weight:800; font-size:15px;">تحلیل هوشمند کل کتابخانه فیلم</h3>
+          <p style="font-size:12px; color:var(--text-muted);">تحلیل عادت‌ها، سلایق و پیشنهاد عناوین گمشده</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-secondary" id="regenGlobalAiBtn" style="display:none;" onclick="generateGlobalAIAnalysis(true)">🔄 بازتولید تحلیل</button>
+        <button class="btn" onclick="generateGlobalAIAnalysis(false)">💡 آنالیز کل آرشیو</button>
+      </div>
+    </div>
+    <div class="ai-response" id="globalAiResponse">درخواست آنالیز کل آرشیو را صادر کنید تا موتور هوشمند بر اساس پارامترهای اعمال شده لیست شما را تحلیل کند...</div>
+  </section>
+
+  <div class="modal-backdrop" id="addModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalMetaTitle" style="font-size:16px; font-weight:800;">اضافه کردن به آرشیو</h3>
+        <button class="btn btn-secondary" style="padding:4px 8px;" onclick="closeModal('addModal')">✖</button>
+      </div>
+      <div id="addModalContent"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="progressModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size:16px; font-weight:800;">⚙️ بروزرسانی وضعیت قسمت‌ها</h3>
+        <button class="btn btn-secondary" style="padding:4px 8px;" onclick="closeModal('progressModal')">✖</button>
+      </div>
+      <div id="progressModalContent"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="notesModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size:16px; font-weight:800;">📝 یادداشت‌های من</h3>
+        <button class="btn btn-secondary" style="padding:4px 8px;" onclick="closeModal('notesModal')">✖</button>
+      </div>
+      <div class="form-group">
+        <label>متن یادداشت‌ها، لیست فیلم‌های آینده یا برنامه‌ تماشا:</label>
+        <textarea id="generalNotesTextArea" class="form-control" style="min-height: 250px; resize: vertical;" oninput="saveGeneralNotes(this.value)"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size:16px; font-weight:800;">تنظیمات هوش مصنوعی و سورس آرشیو</h3>
+        <button class="btn btn-secondary" style="padding:4px 8px;" onclick="closeModal('settingsModal')">✖</button>
+      </div>
+
+      <div class="form-group">
+        <label>زبان پیش‌فرض نمایش داستان (UI Language):</label>
+        <select id="uiLanguageSetting" class="form-control">
+          <option value="en">English (نمایش خلاصه اصلی انگلیسی)</option>
+          <option value="fa">Persian / فارسی (ترجمه خودکار هوش مصنوعی)</option>
+        </select>
+      </div>
+
+      <div style="border-top: 1px solid var(--border); margin: 20px 0 15px 0; padding-top: 15px;">
+        <p style="font-size: 13px; color: var(--cyan); margin-bottom: 12px; font-weight:bold;">📥 بارگذاری فایل متنی / سورس آرشیو (ذخیره آفلاین ابدی)</p>
+        <div class="form-group">
+          <label>فایل HTML دانلود شده از صفحه آرشیو را انتخاب کنید:</label>
+          <input type="file" id="archiveHtmlFileInput" class="form-control" accept=".html,.htm" onchange="handleArchiveHtmlUpload(event)">
+          <div id="archiveUploadStatus" style="font-size: 12px; color: #ffb020; margin-top: 8px; font-weight: bold;"></div>
+        </div>
+      </div>
+
+      <button class="btn" style="width:100%; margin-top:5px;" onclick="saveSettings()">ذخیره تنظیمات</button>
+    </div>
+  </div>
+
+  <script>
+    // --- Original Working Configuration ---
+    const OMDB_KEY = "4b0254f3";
+    
+    // --- NEW PUBLIC AI ENGINE CONFIGURATION ---
+    const GROQ_API_KEY = "YOUR_GROQ_API_KEY_HERE"; 
+
+    // --- IndexedDB for Persistent Offline Archive Storage ---
+    const DB_NAME = 'CineTrackDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'archives';
+
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME);
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
     }
-    const response = await fetch(AVALAI_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${AVALAI_API_KEY}` },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
+
+    async function saveArchiveToDB(text) {
+      try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).put(text, 'archiveHtml');
+        return new Promise((resolve, reject) => {
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      } catch (e) { console.error("IndexedDB Save Error:", e); }
+    }
+
+    async function loadArchiveFromDB() {
+      try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const request = tx.objectStore(STORE_NAME).get('archiveHtml');
+        return new Promise((resolve) => {
+          request.onsuccess = () => resolve(request.result || "");
+          request.onerror = () => resolve("");
+        });
+      } catch (e) { console.error("IndexedDB Load Error:", e); return ""; }
+    }
+
+    let state = {
+      items: JSON.parse(localStorage.getItem("cinetrack_ultimate_db") || "[]"),
+      selectedId: null,
+      filters: { status: 'all', type: 'all', special: 'all', genre: 'all' },
+      sortBy: 'dateAdded',
+      omdbCache: JSON.parse(localStorage.getItem("cinetrack_omdb_cache") || "{}"),
+      globalAiCache: localStorage.getItem("cinetrack_global_ai_cache") || "",
+      archiveHtmlSource: "",
+      audioReviews: JSON.parse(localStorage.getItem("cinetrack_audio_reviews") || "{}"),
+      uiLanguage: localStorage.getItem("cinetrack_ui_lang") || "en"
+    };
+
+    let searchDebounceTimer;
+    let isSavingItem = false;
+    let recognition = null;
+
+    async function init() {
+      state.archiveHtmlSource = await loadArchiveFromDB();
+      renderDashboard(); extractAndRenderGenres(); renderGrid(); renderHero();
+      setupFilterButtonsUI(); renderWatchNext(); initSpeechRecognition();
+
+      document.getElementById("uiLanguageSetting").value = state.uiLanguage;
+      if (state.archiveHtmlSource) {
+        document.getElementById("archiveUploadStatus").innerText = "✅ فایل آرشیو با موفقیت از دیتابیس (IndexedDB) بارگذاری شد.";
+      }
+
+      document.getElementById("generalNotesTextArea").value = localStorage.getItem("cinetrack_general_notes") || "";
+      if (state.globalAiCache) {
+        document.getElementById("globalAiResponse").innerHTML = state.globalAiCache;
+        document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
+      }
+    }
+
+    function saveStateToStorage() {
+      localStorage.setItem("cinetrack_ultimate_db", JSON.stringify(state.items));
+      renderDashboard(); extractAndRenderGenres(); renderWatchNext();
+    }
+
+    function handleArchiveHtmlUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const rawText = e.target.result;
+        state.archiveHtmlSource = rawText;
+        await saveArchiveToDB(rawText);
+        document.getElementById("archiveUploadStatus").innerText = "✅ فایل بارگذاری و روی مرورگر ذخیره شد: " + file.name;
+        alert("سورس آرشیو با موفقیت برای استفاده همیشگی (آفلاین) ذخیره شد.");
+        if (state.selectedId) renderHero();
+      };
+      reader.readAsText(file);
+    }
+
+    function getAllArchiveLinks() {
+      if (!state.archiveHtmlSource) return [];
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(state.archiveHtmlSource, 'text/html');
+      return Array.from(doc.getElementsByTagName('a')).map(link => ({
+        text: (link.innerText || link.textContent || '').trim(),
+        url: link.getAttribute('href') || ''
+      })).filter(l => l.url && l.url.length > 5);
+    }
+
+    function buildTitleRegex(title) {
+      const cleaned = title.toLowerCase().replace(/[''':!?,.()\[\]]/g, '').replace(/\s+/g, ' ').trim();
+      const words = cleaned.split(' ').filter(w => w.length > 0);
+      const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      const pattern = escaped.join('[-_.\\s]');
+      const rightBoundary = '(?=[/_.\\s]|$|\\d|(?=-(?:s\\d{1,2}e?\\d*|\\d{4}|ep\\d|season\\d)))';
+      return new RegExp('(?:^|[/_.\\s])' + pattern + rightBoundary, 'i');
+    }
+
+    function searchByImdbId(allLinks, imdbID) {
+      const id = imdbID.toLowerCase();
+      return allLinks.filter(l => l.url.toLowerCase().includes(id) || l.text.toLowerCase().includes(id));
+    }
+
+    function searchByTitleOnly(allLinks, title) {
+      const rx = buildTitleRegex(title);
+      return allLinks.filter(l => rx.test(l.url) || rx.test(l.text));
+    }
+
+    function searchByBothStrict(allLinks, title, imdbID) {
+      const id  = imdbID.toLowerCase(); const rx  = buildTitleRegex(title);
+      return allLinks.filter(l => {
+        const urlLow  = l.url.toLowerCase(); const textLow = l.text.toLowerCase();
+        const hasId = urlLow.includes(id) || textLow.includes(id);
+        const hasTitle = rx.test(l.url) || rx.test(l.text);
+        return hasId && hasTitle;
+      });
+    }
+
+    // --- NEW GROQ API ENGINE (No VPN Needed) ---
+    async function callGroqAPI(systemPrompt, userText) {
+      if(GROQ_API_KEY === "YOUR_GROQ_API_KEY_HERE") {
+        throw new Error("⚠️ لطفاً کلید API گراک (Groq) را در سورس کد قرار دهید.");
+      }
+      
+      const url = `https://api.groq.com/openai/v1/chat/completions`;
+      const payload = {
+        model: "llama-3.3-70b-versatile", // Very powerful and fast model
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage }
+          { role: "user", content: userText }
         ],
-        temperature: temperature,
-      })
-    });
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Avalai API Error (${response.status}): ${errText.slice(0, 120)}`);
-    }
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.choices[0].message.content;
-  }
+        temperature: 0.4
+      };
 
-  // Replace old groq functions
-  async function translatePlotInline(id) {
-    const item = state.items.find(i => i.id === id); if (!item) return;
-    const plotEl = document.getElementById(`plot_wrapper_${id}`);
-    if (plotEl) plotEl.innerHTML = `<span>⏳ ترجمه با Avalai...</span>`;
-    try {
-      const translated = await callAvalaiAPI("You are a professional movie translator. Translate the following English plot to fluent Persian (Farsi). Only output translation.", item.plot);
-      if (translated) { item.plotFa = translated.trim(); saveStateToStorage(); renderHero(); }
-    } catch (err) { if(plotEl) plotEl.innerHTML = `<span style="color:red;">خطا: ${err.message}</span>`; }
-  }
-  
-  async function generateGlobalAIAnalysis(forceRegen = false) {
-    if (!forceRegen && state.globalAiCache) { document.getElementById("globalAiResponse").innerHTML = state.globalAiCache; return; }
-    const responseBox = document.getElementById("globalAiResponse");
-    responseBox.innerText = "⏳ تحلیل کتابخانه توسط هوش Avalai...";
-    const summary = state.items.map(i => ({ title: i.title, type: i.type, rating: i.imdbRating, genre: i.genre }));
-    try {
-      const analysis = await callAvalaiAPI("You are CineTrack AI analyst. Analyze the user's media collection in Persian. Highlight favorite genres, patterns, suggest missing masterpieces. Use emojis and nice formatting. Answer ONLY in Persian.", JSON.stringify(summary));
-      state.globalAiCache = analysis; localStorage.setItem("cinetrack_global_ai_cache", analysis);
-      responseBox.innerHTML = analysis;
-    } catch (err) { responseBox.innerText = `خطا: ${err.message}`; }
-  }
-  
-  async function generateSimilarRecommendations(id) {
-    const item = state.items.find(i => i.id === id);
-    const box = document.getElementById("aiSimilarRecommendations");
-    if(!box) return; box.style.display = "block"; box.innerHTML = `<span>🤖 جستجوی مشابه...</span>`;
-    try {
-      const prompt = `Title: ${item.title}, Genre: ${item.genre}, Plot: ${item.plot}. Recommend 5 similar movies or series in Persian. Format nicely.`;
-      const rec = await callAvalaiAPI("You recommend movies. Reply in Persian with bullet points and emojis.", prompt);
-      box.innerHTML = `<div><h4>🎬 پیشنهادات مشابه</h4><div style="font-size:13px;">${rec}</div><button class="btn btn-secondary" style="margin-top:8px;" onclick="this.parentElement.parentElement.style.display='none'">بستن</button></div>`;
-    } catch(e) { box.innerHTML = `<span style="color:red;">خطا: ${e.message}</span>`; }
-  }
-  
-  async function searchWithAI(item, allLinks) {
-    const linkSample = allLinks.slice(0, 400).map((l,i)=> `${i}: ${l.text.slice(0,70)}`).join('\n');
-    const sys = "You are link matcher. Output only comma-separated indices that exactly match the given title/imdb. Output NONE if none. No explanation.";
-    const user = `Title: ${item.title}, IMDB: ${item.id}\nLinks:\n${linkSample}`;
-    try {
-      const res = await callAvalaiAPI(sys, user, 0.2);
-      if (res.trim().toUpperCase() === "NONE") return [];
-      const indices = res.split(/[ ,]+/).map(n=>parseInt(n)).filter(n=>!isNaN(n) && n>=0 && n<allLinks.length);
-      return indices.map(i=>allLinks[i]);
-    } catch(e) { console.warn(e); return null; }
-  }
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await res.json();
+      if (data.error) {
+        throw new Error(data.error.message);
+      }
+      return data.choices[0].message.content;
+    }
 
-  // ---- Restore original methods but replace AI call for link matching ----
-  async function matchAndExtractLinks(imdbID) {
-    const item = state.items.find(i => i.id === imdbID);
-    const resultsDiv = document.getElementById("archiveMatchResults");
-    if(!resultsDiv) return;
-    if(!state.archiveHtmlSource) { resultsDiv.innerHTML = `<div style="background:#fee2e2;padding:12px;border-radius:12px;">⚠️ فایل آرشیو آپلود نشده. تنظیمات > آپلود فایل HTML</div>`; return; }
-    const allLinks = getAllArchiveLinks();
-    let matches = [];
-    resultsDiv.innerHTML = `<div class="stage-indicator"><div class="stage-spinner"></div><span>جستجو با IMDb ID...</span></div>`;
-    await delay(50);
-    matches = searchByImdbId(allLinks, imdbID);
-    if(matches.length===0) { matches = searchByTitleOnly(allLinks, item.title); }
-    if(matches.length===0) { 
-      resultsDiv.innerHTML = `<div>⏳ مرحله هوشمند Avalai...</div>`;
-      const aiMatches = await searchWithAI(item, allLinks);
-      if(aiMatches && aiMatches.length) matches = aiMatches;
+    // --- RESTORED & ENHANCED ORIGINAL LINK FINDING LOGIC ---
+    async function searchWithAI(item, allLinks) {
+      const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
+      
+      // Restored the exact original prompt structure that worked well, pointed at Groq
+      const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title — not related titles or spin-offs. For TV series include only season/episode links for THIS show. If nothing matches, output NONE. Output indices or NONE only — no explanation.`;
+      const userText = `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`;
+      
+      try {
+        const responseText = await callGroqAPI(systemPrompt, userText);
+        const answer = responseText.trim();
+        
+        // Restored original parsing logic for perfect compatibility
+        if (/^none$/i.test(answer) || answer === '') return [];
+        const indices = answer.split(/[\s,،]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0 && n < allLinks.length);
+        
+        return indices.map(i => allLinks[i]);
+      } catch (e) {
+        console.error("AI link search failed:", e);
+      }
+      return null;
     }
-    if(matches.length===0) { resultsDiv.innerHTML = `<div style="color:red;">❌ هیچ لینکی یافت نشد.</div>`; return; }
-    renderExtractedLinks(matches, item, resultsDiv, `✅ ${matches.length} لینک یافت شد`);
-  }
-  
-  function getAllArchiveLinks() { if(!state.archiveHtmlSource) return []; const parser = new DOMParser(); const doc = parser.parseFromString(state.archiveHtmlSource, 'text/html'); return Array.from(doc.getElementsByTagName('a')).map(a=>({text:a.innerText.trim(), url:a.href})).filter(l=>l.url && l.url.length>5); }
-  function searchByImdbId(links, imdb) { const id = imdb.toLowerCase(); return links.filter(l=>l.url.toLowerCase().includes(id)||l.text.toLowerCase().includes(id)); }
-  function searchByTitleOnly(links, title) { const regex = new RegExp(title.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').split(' ').join('[-_.\\s]'), 'i'); return links.filter(l=>regex.test(l.url)||regex.test(l.text)); }
-  function renderExtractedLinks(matches, item, container, label) { /* simplified quality display */ let html=`<div style="margin:10px 0; border-top:1px solid var(--border); padding-top:10px;"><div>${label}</div>`; matches.forEach(m=>{ html+=`<a href="${m.url}" target="_blank" style="display:block; background:#f1f5f9; margin:6px 0; padding:8px; border-radius:10px; text-decoration:none; color:var(--cyan);">📥 ${m.text || m.url}</a>`; }); html+=`</div>`; container.innerHTML=html; }
-  function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
-  
-  // ----------------------------- CHATBOT WITH FULL OMDB ACCESS ---------------------------------
-  async function handleChatQuery(userMessage) {
-    const chatMessagesDiv = document.getElementById("chatMessages");
-    const userMsgDiv = document.createElement("div"); userMsgDiv.className = "chat-message user-msg"; userMsgDiv.innerText = userMessage;
-    chatMessagesDiv.appendChild(userMsgDiv); chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
-    const typingDiv = document.createElement("div"); typingDiv.className = "typing-indicator"; typingDiv.innerText = "🤖 در حال فکر کردن...";
-    chatMessagesDiv.appendChild(typingDiv);
-    // Prepare context: user library short summary + ability to fetch OMDB details for specific titles if needed
-    let libraryContext = state.items.slice(0, 35).map(i=>`${i.title} (${i.type}) - IMDb:${i.imdbRating || '?'} - وضعیت:${i.status}`).join("\n");
-    let additionalOMDBInfo = "";
-    // Extract potential movie title from query to enrich context
-    const words = userMessage.split(" ");
-    let possibleTitle = null;
-    for (let w of words) { if(w.length > 3 && !["فیلم","سریال","درباره","معرفی","خلاصه"].includes(w)) { possibleTitle = w; break; } }
-    if(possibleTitle && possibleTitle.length>2) {
-      try { 
-        const searchRes = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&t=${encodeURIComponent(possibleTitle)}`);
-        const omdbData = await searchRes.json();
-        if(omdbData && omdbData.Response === "True") {
-          additionalOMDBInfo = `\n[اطلاعات لحظه‌ای OMDB برای "${possibleTitle}"]\nعنوان: ${omdbData.Title}\nسال: ${omdbData.Year}\nژانر: ${omdbData.Genre}\nIMDb: ${omdbData.imdbRating}\nخلاصه: ${omdbData.Plot}\nبازیگران: ${omdbData.Actors}\n`;
-        } else { additionalOMDBInfo = `\n[${possibleTitle}] در OMDB یافت نشد.`; }
-      } catch(e) { additionalOMDBInfo = ""; }
+
+    async function matchAndExtractLinks(imdbID) {
+      const item = state.items.find(i => i.id === imdbID);
+      const resultsDiv = document.getElementById("archiveMatchResults");
+      if (!resultsDiv) return;
+
+      if (!state.archiveHtmlSource) {
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ فایل آرشیو بارگذاری نشده است. در تنظیمات فایل HTML آرشیو را آپلود کنید.</div>`;
+        return;
+      }
+
+      function stageMsg(n, msg) {
+        resultsDiv.innerHTML = `<div class="stage-indicator"><div class="stage-spinner"></div><span>مرحله ${n} از ۴ — ${msg}</span></div>`;
+      }
+
+      const allLinks = getAllArchiveLinks();
+      let matches = [];
+
+      stageMsg('۱', `جستجو با کد IMDb: ${imdbID}`);
+      await tick();
+      matches = searchByImdbId(allLinks, imdbID);
+      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🆔 یافت‌شده با کد IMDb: <b>${imdbID}</b>`);
+
+      stageMsg('۲', `جستجو با نام دقیق: ${item.title}`);
+      await tick();
+      matches = searchByTitleOnly(allLinks, item.title);
+      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤 یافت‌شده با نام: <b>${item.title}</b>`);
+
+      stageMsg('۳', 'جستجوی ترکیبی — تطابق هم‌زمان کد و نام');
+      await tick();
+      matches = searchByBothStrict(allLinks, item.title, imdbID);
+      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 یافت‌شده با تطابق ترکیبی (کد + نام)`);
+
+      stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با موتور هوشمند ابری...');
+      await tick();
+
+      const aiResult = await searchWithAI(item, allLinks);
+
+      if (aiResult === null) {
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ ارتباط با هوش مصنوعی مقدور نبود (احتمال شلوغی شبکه عمومی).</div>`;
+        return;
+      }
+      if (aiResult.length === 0) {
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ هیچ لینکی برای <b>${item.title}</b> در آرشیو یافت نشد. (تمام ۴ مرحله جستجو انجام شد)</div>`;
+        return;
+      }
+      renderExtractedLinks(aiResult, item, resultsDiv, `🤖 یافت‌شده توسط هوش مصنوعی`);
     }
-    const systemPrompt = `تو یک دستیار هوشمند سینمایی هستی. به زبان فارسی روان پاسخ بده. کتابخانه کاربر شامل موارد زیر است:\n${libraryContext}\n\n${additionalOMDBInfo ? "اطلاعات اضافی از دیتابیس IMDb:\n"+additionalOMDBInfo : ""}\n\nبه سوالات درباره فیلم‌ها، سریال‌ها، پیشنهاد بر اساس سلیقه کاربر و تحلیل کتابخانه پاسخ بده. اگر کاربر درباره فیلم خاصی پرسید که در کتابخانه نیست، می‌توانی از اطلاعات موجود در OMDB که در پیام آمده استفاده کنی. لحن صمیمی و مفید.`;
-    try {
-      const aiAnswer = await callAvalaiAPI(systemPrompt, userMessage, 0.7);
-      chatMessagesDiv.removeChild(typingDiv);
-      const aiMsgDiv = document.createElement("div"); aiMsgDiv.className = "chat-message ai-msg"; aiMsgDiv.innerText = aiAnswer;
-      chatMessagesDiv.appendChild(aiMsgDiv);
-      chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
-    } catch(err) {
-      chatMessagesDiv.removeChild(typingDiv);
-      const errDiv = document.createElement("div"); errDiv.className = "chat-message ai-msg"; errDiv.innerText = `❌ خطا در ارتباط با Avalai: ${err.message}`;
-      chatMessagesDiv.appendChild(errDiv);
+
+    function tick() { return new Promise(r => setTimeout(r, 0)); }
+
+    function renderExtractedLinks(matches, currentItem, resultsDiv, strategyLabel) {
+      const isSeries = currentItem ? currentItem.type === 'series' : false;
+
+      function cleanQualityStr(text) {
+        let q = "";
+        if (text.includes("2160p") || text.includes("4k")) q += "4K ";
+        else if (text.includes("1080p")) q += "1080p ";
+        else if (text.includes("720p")) q += "720p ";
+        else if (text.includes("480p")) q += "480p ";
+        if (text.includes("bluray")) q += "BluRay";
+        else if (text.includes("web-dl") || text.includes("webdl")) q += "Web-DL";
+        else if (text.includes("hdtv")) q += "HDTV";
+        if (text.includes("x265")) q += " x265";
+        if (text.includes("10bit")) q += " 10bit";
+        return q.trim() || "دانلود";
+      }
+
+      function extractFileSize(text) {
+        const m = text.match(/(\d+(?:\.\d+)?\s*(?:GB|MB))/i);
+        return m ? m[1] : "";
+      }
+
+      let softSubLinks = [], dubbedLinks = [];
+      matches.forEach(m => {
+        const combined = (m.text + " " + m.url).toLowerCase();
+        if (combined.includes("dubbed") || combined.includes("دوبله") || combined.includes("dub")) dubbedLinks.push(m);
+        else softSubLinks.push(m);
+      });
+
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;"><span style="font-size:12px;color:var(--text-muted);background:#f1f5f9;padding:4px 10px;border-radius:8px;border:1px solid var(--border);">${strategyLabel} — ${matches.length} لینک</span></div><div class="quality-section-wrapper">`;
+
+      if (!isSeries) {
+        if (softSubLinks.length > 0) {
+          html += `<div><div class="quality-block-title softsub">SoftSub</div>`;
+          softSubLinks.forEach(m => { const q = cleanQualityStr(m.text || m.url); const s = extractFileSize(m.text || m.url); html += `<a href="${m.url}" target="_blank" class="movie-quality-line">📥 ${s ? q + ' / ' + s : q}</a>`; });
+          html += `</div>`;
+        }
+        if (dubbedLinks.length > 0) {
+          html += `<div><div class="quality-block-title dubbed">Dubbed</div>`;
+          dubbedLinks.forEach(m => { const q = cleanQualityStr(m.text || m.url); const s = extractFileSize(m.text || m.url); html += `<a href="${m.url}" target="_blank" class="movie-quality-line">📥 ${s ? q + ' / ' + s : q}</a>`; });
+          html += `</div>`;
+        }
+        if (!softSubLinks.length && !dubbedLinks.length) {
+          matches.forEach(m => { html += `<a href="${m.url}" target="_blank" class="movie-quality-line">📥 ${m.text || m.url}</a>`; });
+        }
+      } else {
+        function renderSeriesGroup(linkArray, label, blockClass) {
+          if (!linkArray.length) return "";
+          const seasons = {};
+          linkArray.forEach(m => {
+            const combined = (m.text + " " + m.url).toLowerCase();
+            let s = 1;
+            const pat = combined.match(/\bs(\d{1,2})e?\d{0,2}\b/) || combined.match(/season[\s._-]*(\d{1,2})/i) || combined.match(/فصل[\s]*(\d{1,4})/);
+            if (pat) s = parseInt(pat[1]);
+            (seasons[s] = seasons[s] || []).push(m);
+          });
+          let out = `<div><div class="quality-block-title ${blockClass}">${label}</div>`;
+          Object.keys(seasons).map(Number).sort((a, b) => a - b).forEach(sn => {
+              out += `<div class="series-season-container"><div class="series-season-title">Season ${sn}</div><div class="series-qualities-row">`;
+              out += seasons[sn].map(m => `<a href="${m.url}" target="_blank">📥 ${cleanQualityStr(m.text || m.url)}</a>`).join(' / ');
+              out += `</div></div>`;
+            });
+          out += `</div>`;
+          return out;
+        }
+
+        html += renderSeriesGroup(softSubLinks, "SoftSub", "softsub");
+        html += renderSeriesGroup(dubbedLinks,  "Dubbed",  "dubbed");
+
+        if (!softSubLinks.length && !dubbedLinks.length) {
+          matches.forEach(m => { html += `<a href="${m.url}" target="_blank" class="movie-quality-line">📥 ${m.text || m.url}</a>`; });
+        }
+      }
+      html += `</div>`;
+      resultsDiv.innerHTML = html;
     }
-  }
-  
-  // ----------------------------- INTEGRATE CHAT UI & STATE MANAGEMENT --------------------------
-  function initChatWidget() {
-    const floatBtn = document.getElementById("chatFloatBtn");
-    const widget = document.getElementById("chatWidget");
-    const closeBtn = document.getElementById("closeChatBtn");
-    const sendBtn = document.getElementById("sendChatBtn");
-    const chatInput = document.getElementById("chatInput");
-    floatBtn.onclick = () => { widget.classList.toggle("open"); if(widget.classList.contains("open")) document.getElementById("chatInput")?.focus(); };
-    closeBtn.onclick = () => widget.classList.remove("open");
-    sendBtn.onclick = async () => { const txt = chatInput.value.trim(); if(!txt) return; chatInput.value = ""; await handleChatQuery(txt); };
-    chatInput.addEventListener("keypress", (e) => { if(e.key === "Enter") sendBtn.click(); });
-  }
-  
-  // ---- Helper functions to rebuild all UI ----
-  function renderDashboard() { /* identical to original but compact */ const total=state.items.length, watching=state.items.filter(i=>i.status==="Watching").length, completed=state.items.filter(i=>i.status==="Completed").length; let sumImdb=0, cnt=0; state.items.forEach(i=>{ let r=parseFloat(i.imdbRating); if(!isNaN(r)){sumImdb+=r;cnt++;}}); const imdbAvg=cnt? (sumImdb/cnt).toFixed(1):"0"; document.getElementById("dashboardStats").innerHTML=`<div class="stat-card"><h3>${total}</h3><p>کل عناوین</p></div><div class="stat-card"><h3>${watching}</h3><p>در حال تماشا</p></div><div class="stat-card"><h3>${completed}</h3><p>تماشا شده</p></div><div class="stat-card"><h3>⭐ ${imdbAvg}</h3><p>میانگین IMDb</p></div>`; }
-  function getFilteredAndSortedItems() { let arr=[...state.items]; if(state.filters.status!=='all') arr=arr.filter(i=>i.status===state.filters.status); if(state.filters.type!=='all') arr=arr.filter(i=>i.type===state.filters.type); if(state.filters.genre!=='all') arr=arr.filter(i=>i.genre?.includes(state.filters.genre)); if(state.filters.special==='highRated') arr=arr.filter(i=>parseFloat(i.imdbRating)>=8); if(state.filters.special==='personalTop') arr=arr.filter(i=>i.userRating===5); arr.sort((a,b)=>{ if(state.sortBy==='title') return a.title.localeCompare(b.title); if(state.sortBy==='imdb') return (parseFloat(b.imdbRating)||0)-(parseFloat(a.imdbRating)||0); if(state.sortBy==='year') return parseInt(b.year)-parseInt(a.year); return new Date(b.dateAdded)-new Date(a.dateAdded); }); return arr; }
-  function renderGrid() { const container=document.getElementById("mainGrid"); const items=getFilteredAndSortedItems(); if(!items.length){container.innerHTML="<div>خالی</div>"; return;} container.innerHTML=items.map(item=>`<div class="movie-card" onclick="selectGridItem('${item.id}')"><div class="card-poster-wrapper"><img src="${item.poster!=='N/A'?item.poster:'https://via.placeholder.com/200x280'}" style="width:100%;height:100%;object-fit:cover;"></div><div class="card-info"><div>${item.title}</div><div>⭐ ${item.imdbRating}</div></div></div>`).join(''); }
-  function selectGridItem(id){ state.selectedId=id; renderGrid(); renderHero(); }
-  function saveStateToStorage(){ localStorage.setItem("cinetrack_ultimate_db", JSON.stringify(state.items)); renderDashboard(); renderGrid(); renderWatchNext(); }
-  function renderHero(){ /* minimal but functional */ const container=document.getElementById("heroSection"); if(!state.selectedId && state.items.length) state.selectedId=state.items[0]?.id; const item=state.items.find(i=>i.id===state.selectedId); if(!item){ container.innerHTML="<div>انتخاب نشده</div>"; return; } container.innerHTML=`<div><h2>${item.title}</h2><p>IMDb: ${item.imdbRating} | وضعیت: ${item.status}</p><button class="btn btn-stream" onclick="matchAndExtractLinks('${item.id}')">🔍 لینک‌ها</button><button class="btn btn-stream-next" onclick="generateSimilarRecommendations('${item.id}')">🤖 مشابه‌ها</button><div id="archiveMatchResults"></div><div id="aiSimilarRecommendations" style="margin-top:10px;"></div></div>`; }
-  function renderWatchNext(){ const cont=document.getElementById("watchNextContainer"); const top=state.items.find(i=>i.status==="Watching")||state.items[0]; if(top) cont.innerHTML=`<div>🎯 پیشنهاد: ${top.title}</div>`; else cont.innerHTML="<div>عنوانی موجود نیست</div>"; }
-  async function handleArchiveHtmlUpload(e){ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=async (ev)=>{ state.archiveHtmlSource=ev.target.result; await saveArchiveToDB(state.archiveHtmlSource); alert("آرشیو لینک‌ها ذخیره شد."); }; reader.readAsText(file); }
-  function exportLibrary(){ const a=document.createElement('a'); a.href="data:text/json,"+encodeURIComponent(JSON.stringify(state.items)); a.download="library.json"; a.click(); }
-  function importLibrary(event){ const file=event.target.files[0]; const reader=new FileReader(); reader.onload=(e)=>{ const arr=JSON.parse(e.target.result); if(Array.isArray(arr)){ state.items=arr; saveStateToStorage(); renderGrid(); renderHero(); } }; reader.readAsText(file); }
-  function saveSettings(){ const lang=document.getElementById("uiLanguageSetting").value; state.uiLanguage=lang; localStorage.setItem("cinetrack_ui_lang",lang); closeModal('settingsModal'); renderHero(); }
-  function closeModal(id){ document.getElementById(id).classList.remove("active"); }
-  function openSettingsModal(){ document.getElementById("settingsModal").classList.add("active"); }
-  function init(){ loadArchiveFromDB().then(html=>{if(html) state.archiveHtmlSource=html; renderDashboard(); renderGrid(); renderHero(); renderWatchNext(); initChatWidget(); }); }
-  window.onload = init;
-  // attach missing functions for UI
-  window.matchAndExtractLinks = matchAndExtractLinks; window.generateSimilarRecommendations = generateSimilarRecommendations; window.selectGridItem = selectGridItem; window.exportLibrary = exportLibrary; window.importLibrary = importLibrary; window.openSettingsModal = openSettingsModal; window.closeModal = closeModal; window.saveSettings = saveSettings; window.generateGlobalAIAnalysis = generateGlobalAIAnalysis; window.translatePlotInline = translatePlotInline; window.handleArchiveHtmlUpload = handleArchiveHtmlUpload; window.renderHero = renderHero;
-  document.getElementById("filterBarPlaceholder")?.insertAdjacentHTML("beforebegin", `<div class="filters-group" id="filterContainer"><button class="filter-btn" onclick="setFilter('status','all')">همه</button><button class="filter-btn" onclick="setFilter('status','Watching')">در حال تماشا</button><button class="filter-btn" onclick="setFilter('status','Completed')">تمام شده</button><button class="filter-btn" onclick="setFilter('type','movie')">فیلم</button><button class="filter-btn" onclick="setFilter('type','series')">سریال</button></div>`);
-  window.setFilter = (key,val)=>{ state.filters={status:'all',type:'all',special:'all',genre:'all', [key]:val }; renderGrid(); };
-  // replicate missing dom elements references safety
-  if(!document.getElementById("archiveMatchResults")) console.log("ok");
-</script>
+
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'fa-IR';
+        recognition.interimResults = false;
+        recognition.onresult = function(event) {
+          const textarea = document.getElementById("audioReviewTextarea");
+          if (textarea) {
+            textarea.value = (textarea.value + " " + event.results[0][0].transcript).trim();
+            saveAudioReview(state.selectedId, textarea.value);
+          }
+          setRecordingState(false);
+        };
+        recognition.onerror = function() { setRecordingState(false); };
+        recognition.onend = function() { setRecordingState(false); };
+      }
+    }
+
+    function toggleVoiceInput() {
+      if (!recognition) { alert("سیستم تشخیص صدا پشتیبانی نمی‌شود."); return; }
+      const recBtn = document.getElementById("voiceRecBtn");
+      if (recBtn.classList.contains("recording")) recognition.stop();
+      else { setRecordingState(true); recognition.start(); }
+    }
+
+    function setRecordingState(isRec) {
+      const recBtn = document.getElementById("voiceRecBtn");
+      if (!recBtn) return;
+      if (isRec) { recBtn.classList.add("recording"); recBtn.innerHTML = "🛑 در حال ضبط..."; } 
+      else { recBtn.classList.remove("recording"); recBtn.innerHTML = "🎙️ ضبط صدا"; }
+    }
+
+    function saveAudioReview(id, text) {
+      state.audioReviews[id] = text;
+      localStorage.setItem("cinetrack_audio_reviews", JSON.stringify(state.audioReviews));
+    }
+
+    async function translatePlotInline(id) {
+      const item = state.items.find(i => i.id === id);
+      if (!item) return;
+
+      const plotEl = document.getElementById(`plot_wrapper_${id}`);
+      if (plotEl) plotEl.innerHTML = `<span style="color:var(--cyan); font-weight:600;">⏳ در حال ترجمه داستان به فارسی...</span>`;
+      
+      const sysPrompt = "You are an expert movie translator. Translate the following English movie plot into natural, fluent Persian (Farsi). Output ONLY the translation. Do not use Markdown blocks.";
+      
+      try {
+        const translatedText = await callGroqAPI(sysPrompt, item.plot);
+        if (translatedText) {
+          item.plotFa = translatedText.trim();
+          saveStateToStorage(); renderHero();
+        }
+      } catch (err) {
+        if (plotEl) plotEl.innerHTML = `<span style="color:red;">خطا: ${err.message}</span>`;
+      }
+    }
+
+    function getProgressPercent(item) {
+      if (item.type !== 'series') return 0;
+      const totalS   = parseInt(item.totalSeasons) || 1;
+      const currentS = parseInt(item.season)       || 1;
+      const currentE = parseInt(item.episode)       || 1;
+      let basePercent     = ((currentS - 1) / totalS) * 100;
+      let episodeFraction = (currentE / 15) * (100 / totalS);
+      return Math.min(Math.max(Math.round(basePercent + episodeFraction), 0), 100);
+    }
+
+    function openManageProgressModal(id) {
+      const item = state.items.find(i => i.id === id);
+      if (!item) return;
+
+      const backdrop  = document.getElementById("progressModal");
+      const container = document.getElementById("progressModalContent");
+      container.innerHTML = `
+        <input type="hidden" id="progressManageId" value="${item.id}">
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px;">* نیازی به وارد کردن اطلاعات تمامی فصول نیست. برنامه به صورت هوشمند پیشرفت شما را محاسبه می‌کند.</p>
+        <div class="form-row">
+          <div class="form-group"><label>در حال تماشای کدام فصل هستید؟</label><input type="number" id="progressManageSeason" class="form-control" value="${item.season || 1}" min="1" max="${item.totalSeasons || 50}"></div>
+          <div class="form-group"><label>کدام قسمت؟</label><input type="number" id="progressManageEpisode" class="form-control" value="${item.episode || 1}" min="1"></div>
+        </div>
+        <button class="btn" style="width:100%; margin-top:15px;" onclick="saveQuickProgress()">⚡ اعمال تغییرات وضعیت</button>
+      `;
+      backdrop.classList.add("active");
+    }
+
+    function saveQuickProgress() {
+      const id   = document.getElementById("progressManageId").value;
+      const item = state.items.find(i => i.id === id);
+      if (!item) return;
+      item.season      = parseInt(document.getElementById("progressManageSeason").value)  || 1;
+      item.episode     = parseInt(document.getElementById("progressManageEpisode").value) || 1;
+      item.lastUpdated = new Date().toISOString();
+      saveStateToStorage(); closeModal("progressModal"); renderHero(); renderGrid();
+    }
+
+    function renderHero() {
+      const container = document.getElementById("heroSection");
+      if (!state.selectedId || state.items.length === 0) {
+        const nextUp = getTopWatchNext();
+        if (nextUp) { state.selectedId = nextUp.id; }
+        else { container.innerHTML = `<div class="hero-empty"><span style="font-size:36px;">🎬</span><p>فیلم یا سریالی را جستجو و انتخاب کنید.</p></div>`; return; }
+      }
+
+      const item = state.items.find(i => i.id === state.selectedId);
+      if (!item) return;
+
+      const isSeries      = item.type === 'series';
+      const progressPct   = getProgressPercent(item);
+      const savedReview   = state.audioReviews[item.id] || "";
+
+      let displayPlot = item.plot;
+      if (state.uiLanguage === 'fa') {
+        if (item.plotFa) displayPlot = item.plotFa;
+        else displayPlot = `<div id="plot_wrapper_${item.id}"><span style="color:var(--text-muted);font-size:13px;display:block;margin-bottom:8px;">خلاصه داستان به زبان فارسی تولید نشده است.</span><button class="btn btn-secondary" style="padding:4px 10px;font-size:11px;" onclick="translatePlotInline('${item.id}')">✨ ترجمه خلاصه داستان به فارسی با AI</button></div>`;
+      }
+
+      container.innerHTML = `
+        <div class="hero-content">
+          <img src="${item.poster !== 'N/A' ? item.poster : 'https://via.placeholder.com/220x320?text=No+Cover'}" class="hero-poster">
+          <div class="hero-details">
+            <h2 class="hero-title">${item.title}</h2>
+            <div class="hero-meta">
+              <span class="badge badge-status">${translateStatus(item.status)}</span>
+              <span class="badge">IMDb ${item.imdbRating || 'N/A'}</span>
+              <span class="badge">سال: ${item.year || 'N/A'}</span>
+              <span class="badge">امتیاز شما: ${renderStarsStatic(item.userRating)}</span>
+            </div>
+
+            <div class="hero-extended-info">
+              <div class="extended-row"><strong>🎬 کارگردان:</strong> ${item.director || 'نامشخص'}</div>
+              <div class="extended-row"><strong>🎭 ستارگان:</strong> ${item.actors || 'نامشخص'}</div>
+              <div class="extended-row"><strong>🌍 کشور / زبان:</strong> ${item.country || 'نامشخص'} / ${item.language || 'نامشخص'}</div>
+              <div class="extended-row"><strong>🏆 جوایز:</strong> ${item.awards || 'بدون ثبت'}</div>
+              <div class="extended-row"><strong>🆔 IMDb ID:</strong> <span style="font-family:monospace;font-size:12px;background:#f1f5f9;padding:2px 7px;border-radius:6px;border:1px solid var(--border);color:var(--cyan);font-weight:700;">${item.id}</span></div>
+            </div>
+
+            <div class="hero-plot">${displayPlot}</div>
+
+            ${isSeries ? `<div class="episode-progress-block"><div class="episode-progress-header"><span class="episode-progress-title">🍿 پیشرفت تماشای سریال (کل فصل‌ها: ${item.totalSeasons || '?'})</span><span class="episode-progress-count">فصل ${item.season}، قسمت ${item.episode}</span></div><div class="progress-container"><div class="progress-bar" style="width:${progressPct}%"></div></div><div style="text-align:left;font-size:11px;color:var(--text-muted);margin-top:5px;font-weight:bold;">${progressPct}% تکمیل شده</div></div>` : ''}
+
+            <div id="archiveMatchResults" style="margin-top:15px;margin-bottom:15px;"></div>
+            <div id="aiSimilarRecommendations" style="margin-top:15px;margin-bottom:15px;background:#f0f9ff;border:1px dashed #bae6fd;padding:16px;border-radius:12px;display:none;color:var(--text-main);"></div>
+
+            <div class="audio-review-block">
+              <div class="audio-controls">
+                <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">✍️</span><div><h4 style="font-size:13px;font-weight:800;color:var(--text-main);margin:0;">نقد و نظر شخصی</h4><p style="font-size:11px;color:var(--text-muted);margin:0;">دیدگاه خود را بنویسید یا ضبط کنید</p></div></div>
+                <button id="voiceRecBtn" class="voice-rec-btn" onclick="toggleVoiceInput()">🎙️ ضبط صدا</button>
+              </div>
+              <textarea id="audioReviewTextarea" class="review-textarea" placeholder="نقد، یادداشت یا احساستان درباره این اثر را بنویسید..." oninput="saveAudioReview('${item.id}', this.value)">${savedReview}</textarea>
+            </div>
+
+            <div class="hero-actions">
+              <button class="btn btn-stream" onclick="matchAndExtractLinks('${item.id}')">🔍 استخراج لینک‌ها</button>
+              <button class="btn btn-stream-next" onclick="generateSimilarRecommendations('${item.id}')">🤖 پیشنهاد مشابه AI</button>
+              ${isSeries ? `<button class="btn btn-secondary" onclick="openManageProgressModal('${item.id}')">⚙️ تغییر قسمت</button>` : ''}
+              <button class="btn btn-secondary btn-delete" onclick="deleteItem('${item.id}')">🗑️ حذف</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDashboard() {
+      const container = document.getElementById("dashboardStats");
+      if (!container) return;
+      const total     = state.items.length;
+      const watching  = state.items.filter(i => i.status === "Watching").length;
+      const completed = state.items.filter(i => i.status === "Completed").length;
+
+      let totalImdb = 0, imdbCount = 0;
+      state.items.forEach(i => { let p = parseFloat(i.imdbRating); if (!isNaN(p)) { totalImdb += p; imdbCount++; } });
+      const imdbAvg = imdbCount > 0 ? (totalImdb / imdbCount).toFixed(1) : "0.0";
+
+      let totalUR = 0, urCount = 0;
+      state.items.forEach(i => { if (i.userRating > 0) { totalUR += i.userRating; urCount++; } });
+      const userAvg = urCount > 0 ? (totalUR / urCount).toFixed(1) : "0.0";
+
+      let genreFreq = {};
+      state.items.forEach(i => { if (i.genre && i.genre !== "N/A") i.genre.split(",").forEach(g => { let cg = g.trim(); genreFreq[cg] = (genreFreq[cg] || 0) + 1; }); });
+      let favoriteGenre = "نامشخص", maxCount = 0;
+      for (let g in genreFreq) { if (genreFreq[g] > maxCount) { maxCount = genreFreq[g]; favoriteGenre = g; } }
+
+      container.innerHTML = `<div class="stat-card"><h3>${total}</h3><p>کل عناوین</p></div><div class="stat-card"><h3>${watching}</h3><p>⏳ در حال تماشا</p></div><div class="stat-card"><h3>${completed}</h3><p>✅ تمام شده</p></div><div class="stat-card"><h3>⭐ ${imdbAvg}</h3><p>میانگین کل IMDb</p></div><div class="stat-card"><h3>★ ${userAvg}</h3><p>میانگین امتیازهای من</p></div><div class="stat-card"><h3 style="font-size:15px;font-weight:800;padding-top:6px;color:var(--cyan);">${favoriteGenre}</h3><p>🎭 ژانر محبوب</p></div>`;
+    }
+
+    // --- RESTORED EXACT ORIGINAL OMDB FETCH LOGIC ---
+    function handleSearch(query) {
+      clearTimeout(searchDebounceTimer);
+      const dropdown = document.getElementById("searchDropdown");
+      if (!query || query.trim().length < 3) { dropdown.style.display = "none"; return; }
+
+      searchDebounceTimer = setTimeout(async () => {
+        try {
+          let res  = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&s=${encodeURIComponent(query.trim())}`);
+          let data = await res.json();
+          if (data.Response === "True" && data.Search) {
+            dropdown.innerHTML = data.Search.map(item => `
+              <div class="search-item" onclick="fetchItemFullDetails('${item.imdbID}')">
+                <img src="${item.Poster !== 'N/A' ? item.Poster : 'https://via.placeholder.com/45x65?text=No'}" alt="">
+                <div class="info"><h4>${item.Title}</h4><p>${item.Year} • [${translateType(item.Type)}]</p></div>
+              </div>
+            `).join('');
+            dropdown.style.display = "block";
+          } else {
+            dropdown.innerHTML = `<div style="padding:15px;font-size:13px;color:var(--text-muted);text-align:center;">نتیجه‌ای یافت نشد.</div>`;
+            dropdown.style.display = "block";
+          }
+        } catch (error) { console.error(error); }
+      }, 400);
+    }
+
+    function clearSearchInput() { document.getElementById("searchInput").value = ""; document.getElementById("searchDropdown").style.display = "none"; }
+    function translateType(type) { if (type === "movie") return "فیلم سینمایی"; if (type === "series") return "سریال تلویزیونی"; return type; }
+
+    async function fetchItemFullDetails(imdbID) {
+      document.getElementById("searchDropdown").style.display = "none";
+      let movieData;
+      if (state.omdbCache[imdbID]) { movieData = state.omdbCache[imdbID]; } 
+      else {
+        try {
+          // Exact logic from the original version ensuring clean full plots
+          let res = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&i=${imdbID}&plot=full`);
+          movieData = await res.json();
+          if (movieData.Response === "True") { state.omdbCache[imdbID] = movieData; localStorage.setItem("cinetrack_omdb_cache", JSON.stringify(state.omdbCache)); }
+        } catch (e) { alert("خطا در برقراری ارتباط با OMDb"); return; }
+      }
+      openAddModal(movieData);
+    }
+
+    function openAddModal(data) {
+      const backdrop  = document.getElementById("addModal");
+      const container = document.getElementById("addModalContent");
+      const isSeries  = data.Type === "series";
+      container.innerHTML = `
+        <div style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;">
+          <img src="${data.Poster !== 'N/A' ? data.Poster : 'https://via.placeholder.com/150x220?text=No+Cover'}" style="width:110px;height:160px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+          <div style="flex:1;min-width:240px;">
+            <h3 style="margin-bottom:6px;font-weight:800;font-size:15px;">${data.Title}</h3>
+            <p style="font-size:12.5px;margin-bottom:4px;">📅 <b>سال:</b> ${data.Year} | ⭐ <b>امتیاز:</b> ${data.imdbRating}</p>
+            <p style="font-size:12.5px;margin-bottom:4px;">🎭 <b>ژانر:</b> ${data.Genre}</p>
+            ${isSeries && data.totalSeasons ? `<p style="font-size:12.5px;margin-bottom:4px;color:var(--blue);">📺 <b>تعداد کل فصل‌ها:</b> ${data.totalSeasons}</p>` : ''}
+          </div>
+        </div>
+        <input type="hidden" id="formImdbID" value="${data.imdbID}">
+        <div class="form-group"><label>وضعیت تماشا:</label><select id="formStatus" class="form-control" onchange="toggleModalSeriesFields(this.value, ${isSeries})"><option value="Watching">⏳ در حال تماشا (Watching)</option><option value="Planned">📅 برنامه‌ریزی شده (Planned)</option><option value="Completed">✅ تمام شده (Completed)</option></select></div>
+        <div id="modalSeriesProgress" style="display:${isSeries ? 'block' : 'none'}"><div class="form-row"><div class="form-group"><label>فصل کنونی:</label><input type="number" id="formSeason" class="form-control" value="1" min="1"></div><div class="form-group"><label>قسمت کنونی:</label><input type="number" id="formEpisode" class="form-control" value="1" min="1"></div></div></div>
+        <div class="form-group"><label>امتیاز شخصی شما:</label><div class="stars-rating" id="modalStars"><span onclick="setStarsValue(1)">★</span><span onclick="setStarsValue(2)">★</span><span onclick="setStarsValue(3)">★</span><span onclick="setStarsValue(4)">★</span><span onclick="setStarsValue(5)">★</span></div><input type="hidden" id="formUserRating" value="0"></div>
+        <button class="btn" style="width:100%;margin-top:10px;" onclick="saveItemFromModal()">💾 ذخیره در کتابخانه</button>
+      `;
+      backdrop.classList.add("active");
+    }
+
+    let currentStarsVal = 0;
+    function setStarsValue(val) {
+      currentStarsVal = val; document.getElementById("formUserRating").value = val;
+      document.querySelectorAll("#modalStars span").forEach((s, i) => { if (i < val) s.classList.add("active"); else s.classList.remove("active"); });
+    }
+
+    function toggleModalSeriesFields(status, isSeries) {
+      const el = document.getElementById("modalSeriesProgress");
+      if (!el || !isSeries) return;
+      el.style.display = (status === "Completed") ? "none" : "block";
+    }
+
+    async function saveItemFromModal() {
+      if (isSavingItem) return; isSavingItem = true;
+      const imdbID     = document.getElementById("formImdbID").value;
+      const status     = document.getElementById("formStatus").value;
+      const userRating = parseInt(document.getElementById("formUserRating").value) || 0;
+      const rawCached  = state.omdbCache[imdbID];
+      if (!rawCached) { isSavingItem = false; return; }
+
+      let season = 1, episode = 1; const isSeries = rawCached.Type === "series";
+      if (isSeries && status !== "Completed") { season = parseInt(document.getElementById("formSeason").value) || 1; episode = parseInt(document.getElementById("formEpisode").value) || 1; }
+
+      const existingIdx = state.items.findIndex(i => i.id === imdbID);
+      const newItem = {
+        id: imdbID, title: rawCached.Title, type: rawCached.Type, poster: rawCached.Poster, year: rawCached.Year, imdbRating: rawCached.imdbRating, plot: rawCached.Plot, genre: rawCached.Genre, director: rawCached.Director, actors: rawCached.Actors, language: rawCached.Language, country: rawCached.Country, awards: rawCached.Awards, status, userRating, season: isSeries ? season : null, episode: isSeries ? episode : null, totalSeasons: isSeries ? rawCached.totalSeasons : null, dateAdded: existingIdx > -1 ? state.items[existingIdx].dateAdded : new Date().toISOString(), lastUpdated: new Date().toISOString()
+      };
+      if (existingIdx > -1) state.items[existingIdx] = newItem; else state.items.push(newItem);
+      saveStateToStorage(); state.selectedId = imdbID; closeModal('addModal'); renderDashboard(); renderGrid(); renderHero(); isSavingItem = false;
+    }
+
+    function deleteItem(id) {
+      if (!confirm("آیا مطمئن هستید که می‌خواهید این عنوان را حذف کنید؟")) return;
+      state.items = state.items.filter(i => i.id !== id);
+      if (state.selectedId === id) state.selectedId = null;
+      saveStateToStorage(); renderDashboard(); renderGrid(); renderHero();
+    }
+
+    function renderStarsStatic(rating) { let h = ""; for (let i = 1; i <= 5; i++) h += `<span style="color:${i <= rating ? '#ffb020' : '#cbd5e1'};margin-left:1px;">★</span>`; return h; }
+    function translateStatus(s) { if (s === "Watching") return "⏳ در حال تماشا"; if (s === "Planned") return "📅 برنامه‌ریزی شده"; if (s === "Completed") return "✅ تمام شده"; return s; }
+
+    function extractAndRenderGenres() {
+      const select = document.getElementById("genreFilterSelect"); if (!select) return;
+      const currentVal = state.filters.genre; let genresSet = new Set();
+      state.items.forEach(item => { if (item.genre && item.genre !== "N/A") item.genre.split(",").forEach(g => genresSet.add(g.trim())); });
+      let h = `<option value="all">فیلتر ژانر (همه)</option>`;
+      Array.from(genresSet).sort().forEach(g => { h += `<option value="${g}" ${g === currentVal ? 'selected' : ''}>${g}</option>`; });
+      select.innerHTML = h;
+    }
+
+    function setFilter(key, value) {
+      if (key === 'status' || key === 'type' || key === 'special') { state.filters.status = 'all'; state.filters.type = 'all'; state.filters.special = 'all'; }
+      state.filters[key] = value; setupFilterButtonsUI(); renderGrid();
+    }
+
+    function handleGenreChange(val) { state.filters.genre = val; renderGrid(); }
+    function handleSortChange(val)  { state.sortBy = val; renderGrid(); }
+
+    function setupFilterButtonsUI() {
+      const btns = document.querySelectorAll("#filterContainer .filter-btn");
+      btns.forEach(b => b.classList.remove("active"));
+      btns.forEach(b => {
+        const str = b.getAttribute("onclick");
+        if (str.includes("'status'") && str.includes(`'${state.filters.status}'`)) b.classList.add("active");
+        if (str.includes("'type'")   && str.includes(`'${state.filters.type}'`))   b.classList.add("active");
+        if (str.includes("'special'")&& str.includes(`'${state.filters.special}'`))b.classList.add("active");
+      });
+    }
+
+    function getFilteredAndSortedItems() {
+      let arr = [...state.items];
+      if (state.filters.status  !== 'all') arr = arr.filter(i => i.status === state.filters.status);
+      if (state.filters.type    !== 'all') arr = arr.filter(i => i.type === state.filters.type);
+      if (state.filters.genre   !== 'all') arr = arr.filter(i => i.genre && i.genre.includes(state.filters.genre));
+      if (state.filters.special === 'highRated')   arr = arr.filter(i => parseFloat(i.imdbRating) >= 8.0);
+      if (state.filters.special === 'personalTop') arr = arr.filter(i => i.userRating === 5);
+      arr.sort((a, b) => {
+        if (state.sortBy === 'title')      return a.title.localeCompare(b.title);
+        if (state.sortBy === 'imdb')       return (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0);
+        if (state.sortBy === 'year')       return parseInt(b.year) - parseInt(a.year);
+        if (state.sortBy === 'userRating') return b.userRating - a.userRating;
+        return new Date(b.dateAdded) - new Date(a.dateAdded);
+      });
+      return arr;
+    }
+
+    function renderGrid() {
+      const container = document.getElementById("mainGrid");
+      if (!container) return;
+      const items = getFilteredAndSortedItems();
+      if (items.length === 0) { container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-size:13px;">هیچ عنوانی یافت نشد.</div>`; return; }
+      container.innerHTML = items.map(item => {
+        const isSelected = item.id === state.selectedId; const progress = item.type === 'series' ? getProgressPercent(item) : 0;
+        return `<div class="movie-card ${isSelected ? 'selected' : ''}" onclick="selectGridItem('${item.id}')"><div class="card-poster-wrapper"><img src="${item.poster !== 'N/A' ? item.poster : 'https://via.placeholder.com/200x280?text=No+Cover'}" alt=""><div class="card-overlay"><p style="font-size:12px;font-weight:700;">⭐ IMDb: ${item.imdbRating}</p><button class="btn btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="event.stopPropagation();deleteItem('${item.id}')">🗑️ حذف</button></div></div><div class="card-info"><h4 class="card-title" title="${item.title}">${item.title}</h4><div class="card-meta-line"><span>${item.year}</span><span>${translateType(item.type)}</span></div><div style="font-size:11px;margin-top:2px;">امتیاز من: ${renderStarsStatic(item.userRating)}</div>${item.type === 'series' ? `<div class="card-progress">پیشرفت: ${progress}%</div>` : ''}</div></div>`;
+      }).join('');
+    }
+
+    function selectGridItem(id) { state.selectedId = id; renderGrid(); renderHero(); }
+
+    function getTopWatchNext() {
+      let c = state.items.filter(i => i.status === "Watching");
+      if (c.length === 0) c = state.items.filter(i => i.status === "Planned");
+      if (c.length === 0) return null;
+      c.sort((a, b) => {
+        if (a.status !== b.status) return a.status === "Watching" ? -1 : 1;
+        return ((parseFloat(b.imdbRating) || 0) + (b.userRating * 0.5)) - ((parseFloat(a.imdbRating) || 0) + (a.userRating * 0.5));
+      });
+      return c[0];
+    }
+
+    function renderWatchNext() {
+      const container = document.getElementById("watchNextContainer");
+      if (!container) return;
+      const top = getTopWatchNext();
+      if (!top) { container.innerHTML = `<p style="color:var(--text-muted);font-size:13px;">لیست تماشای شما خالی است.</p>`; return; }
+      container.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;cursor:pointer;" onclick="selectGridItem('${top.id}')"><div style="display:flex;align-items:center;gap:15px;"><img src="${top.poster !== 'N/A' ? top.poster : 'https://via.placeholder.com/50x70?text=No'}" style="width:36px;height:50px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"><div><h4 style="font-weight:700;font-size:14.5px;">${top.title}</h4><p style="font-size:12px;color:var(--text-muted);margin-top:2px;">وضعیت: ${translateStatus(top.status)} | ⭐ IMDb: ${top.imdbRating}</p></div></div><button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">🎯 تمرکز روی این عنوان</button></div>`;
+    }
+
+    // --- RESTORED PERSONALIZED AI FEATURES ---
+    async function generateSimilarRecommendations(id) {
+      const item = state.items.find(i => i.id === id);
+      if (!item) return;
+
+      const responseBox = document.getElementById("aiSimilarRecommendations"); if (!responseBox) return;
+      responseBox.style.display = "block";
+      responseBox.innerHTML = `<span style="color:var(--cyan);font-weight:600;">⏳ در حال تحلیل هوشمند عناوین مشابه...</span>`;
+      
+      // Restored original persona, explicitly requested rich formatting
+      const sysPrompt = `You are CineTrack AI Assistant. Recommend 5 movies or TV shows closely similar to the user's selected title. SPEAK STRICTLY IN PERSIAN (FARSI). Do not use English text. Feel free to format your response beautifully with emojis and short bullet points to make it readable.`;
+      const userText = `Title: "${item.title}". Type: ${item.type}. Genre: ${item.genre}. Plot: ${item.plot}. Give 5 recommendations.`;
+      
+      try {
+        const analysis = await callGroqAPI(sysPrompt, userText);
+        responseBox.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:6px;">
+            <h4 style="font-size:13.5px;font-weight:800;color:var(--text-main);">🤖 عناوین مشابه (تحلیل AI)</h4>
+            <button class="btn btn-secondary" style="padding:2px 6px;font-size:10px;" onclick="document.getElementById('aiSimilarRecommendations').style.display='none'">✖</button>
+          </div>
+          <div style="font-size:13px;line-height:1.75;white-space:pre-wrap;">${analysis}</div>`;
+      } catch (err) {
+        responseBox.innerHTML = `<span style="color:red;">خطا: ${err.message}</span>`;
+      }
+    }
+
+    async function generateGlobalAIAnalysis(forceRegen = false) {
+      if (!forceRegen && state.globalAiCache) return;
+      const btn         = document.querySelector(".ai-global-panel .btn");
+      const responseBox = document.getElementById("globalAiResponse");
+      btn.disabled = true;
+      responseBox.innerText = "⏳ در حال آنالیز آماری آرشیو. لطفاً صبور باشید...";
+      
+      const safeData = state.items.map(i => ({ title: i.title, type: i.type, genre: i.genre, rating: i.imdbRating }));
+      
+      // Restored original exact persona "CineTrack AI Brain" to get the personalized insight feeling
+      const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. Give highly personalized structural feedback STRICTLY IN PERSIAN (FARSI). NEVER write in English. Highlight patterns in their taste, note their favorite genres based on the data, and kindly suggest a few masterpiece titles they are missing. Use beautiful formatting with emojis so it looks great on a webpage.`;
+      
+      try {
+        const analysis = await callGroqAPI(sysPrompt, JSON.stringify(safeData));
+        state.globalAiCache = analysis;
+        localStorage.setItem("cinetrack_global_ai_cache", analysis);
+        responseBox.innerHTML = analysis;
+        document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
+      } catch (err) {
+        responseBox.innerText = `خطا: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function exportLibrary() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.items, null, 2));
+      const dlAnchor = document.createElement('a'); dlAnchor.setAttribute("href", dataStr); dlAnchor.setAttribute("download", `cinetrack_library.json`); document.body.appendChild(dlAnchor); dlAnchor.click(); dlAnchor.remove();
+    }
+
+    function importLibrary(event) {
+      const file = event.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try { const parsed = JSON.parse(e.target.result); if (Array.isArray(parsed)) { state.items = parsed; saveStateToStorage(); init(); alert("تکمیل شد."); } } catch (err) { alert("فایل نامعتبر است."); }
+      };
+      reader.readAsText(file);
+    }
+
+    function openNotesModal()    { document.getElementById("notesModal").classList.add("active"); }
+    function saveGeneralNotes(v) { localStorage.setItem("cinetrack_general_notes", v); }
+    function openSettingsModal() { document.getElementById("settingsModal").classList.add("active"); }
+
+    function saveSettings() {
+      const lang  = document.getElementById("uiLanguageSetting").value;
+      state.uiLanguage = lang;
+      localStorage.setItem("cinetrack_ui_lang", lang);
+      alert("تنظیمات ذخیره شد.");
+      closeModal('settingsModal'); renderHero(); renderWatchNext();
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+
+    window.onload = init;
+  </script>
 </body>
 </html>
