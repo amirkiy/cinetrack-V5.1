@@ -356,17 +356,6 @@
         </select>
       </div>
 
-      <div class="form-group">
-        <label>OpenRouter API Key (پیش‌فرض تنظیم شده است):</label>
-        <input type="password" id="openRouterKeyInput" class="form-control" placeholder="sk-or-v1-...">
-      </div>
-
-      <div class="form-group">
-        <label>مدل پردازش هوش مصنوعی مورد نظر شما:</label>
-        <input type="text" id="customModelInput" class="form-control" placeholder="مثلاً: openrouter/free">
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 5px;">* به صورت خودکار روی openrouter/free تنظیم شده است.</p>
-      </div>
-
       <div style="border-top: 1px solid var(--border); margin: 20px 0 15px 0; padding-top: 15px;">
         <p style="font-size: 13px; color: var(--cyan); margin-bottom: 12px; font-weight:bold;">📥 بارگذاری فایل متنی / سورس آرشیو (ذخیره آفلاین ابدی)</p>
         <div class="form-group">
@@ -452,10 +441,10 @@
 
     // --- Helpers to get current active API credentials ---
     function getActiveAPIKey() {
-      return localStorage.getItem("cinetrack_or_key") || DEFAULT_API_KEY;
+      return DEFAULT_API_KEY;
     }
     function getActiveModel() {
-      return localStorage.getItem("cinetrack_or_model") || DEFAULT_MODEL;
+      return DEFAULT_MODEL;
     }
 
     async function init() {
@@ -470,9 +459,7 @@
       renderWatchNext();
       initSpeechRecognition();
 
-      document.getElementById("openRouterKeyInput").value = getActiveAPIKey();
       document.getElementById("uiLanguageSetting").value = state.uiLanguage;
-      document.getElementById("customModelInput").value = getActiveModel();
 
       if (state.archiveHtmlSource) {
         document.getElementById("archiveUploadStatus").innerText = "✅ فایل آرشیو با موفقیت از دیتابیس (IndexedDB) بارگذاری شد.";
@@ -1412,19 +1399,10 @@
     function openSettingsModal() { document.getElementById("settingsModal").classList.add("active"); }
 
     function saveSettings() {
-      const key   = document.getElementById("openRouterKeyInput").value.trim();
-      const model = document.getElementById("customModelInput").value.trim();
       const lang  = document.getElementById("uiLanguageSetting").value;
       
       state.uiLanguage = lang;
       localStorage.setItem("cinetrack_ui_lang", lang);
-      
-      if (key && key !== DEFAULT_API_KEY) {
-        localStorage.setItem("cinetrack_or_key", key);
-      }
-      if (model && model !== DEFAULT_MODEL) {
-        localStorage.setItem("cinetrack_or_model", model);
-      }
       
       alert("تنظیمات ذخیره شد.");
       closeModal('settingsModal');
