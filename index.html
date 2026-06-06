@@ -425,7 +425,7 @@
       }
       
       // Check if Gemini API key is still placeholder
-      if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+      if (GEMINI_API_KEY === "AQ.Ab8RN6LplmkNipEkbCKAtFkNu-YN_zzbBBu150Q5RAZQtc6qKg") {
         console.warn("Gemini API key not set. AI features will show error messages.");
         // Optionally show a non-intrusive warning in the AI panel
         const aiPanel = document.querySelector(".ai-global-panel .ai-response");
@@ -516,7 +516,7 @@
 
     // --- Google Gemini API Call (No CORS, works from file://) ---
     async function callGeminiAPI(systemPrompt, userText) {
-      if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+      if (GEMINI_API_KEY === "AQ.Ab8RN6LplmkNipEkbCKAtFkNu-YN_zzbBBu150Q5RAZQtc6qKg") {
         throw new Error("⚠️ لطفاً کلید API گوگل جمینای را در فایل قرار دهید. از https://aistudio.google.com/ کلید رایگان بگیرید.");
       }
       
