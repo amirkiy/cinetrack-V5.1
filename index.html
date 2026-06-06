@@ -194,6 +194,7 @@
 
     .warning-banner { background: #fffbeb; border: 1px solid #fde047; color: #b45309; padding: 12px 20px; border-radius: 12px; margin: 15px 30px 0 30px; font-size: 13px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .warning-banner .close { margin-right: auto; cursor: pointer; font-weight: bold; }
+    .warning-banner code { background: #fef3c7; padding: 2px 6px; border-radius: 6px; font-family: monospace; }
 
     @media (max-width: 768px) {
       .hero-content { flex-direction: column; align-items: center; }
@@ -346,23 +347,32 @@
   </div>
 
   <script>
-    // --- Original Working Configuration ---
+    // --- API Keys ---
     const OMDB_KEY = "4b0254f3";
-    
-    // --- NEW PUBLIC AI ENGINE CONFIGURATION (Groq) ---
     const GROQ_API_KEY = "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"; 
 
-    // --- Check if running from file:// ---
+    // --- Detect running from file:// and disable AI ---
     const isFileProtocol = window.location.protocol === 'file:';
-    let aiBlocked = false;
+    let aiBlocked = isFileProtocol;
 
     window.addEventListener('DOMContentLoaded', () => {
       if (isFileProtocol) {
         const warningDiv = document.getElementById('corsWarning');
         warningDiv.style.display = 'block';
-        warningDiv.innerHTML = `<div class="warning-banner">⚠️ شما فایل را مستقیماً از روی دیسک باز کرده‌اید (file://). به دلیل سیاست‌های امنیتی مرورگر، تماس با API هوش مصنوعی (Groq) مسدود می‌شود. لطفاً فایل را با یک سرور محلی اجرا کنید، مثلاً: python -m http.server 8080 و سپس به http://localhost:8080 بروید تا همه قابلیت‌های AI کار کنند.<span class="close" onclick="this.parentElement.style.display='none'">✖</span></div>`;
-        aiBlocked = true;
-        // Disable AI buttons visually but keep them, they will show error on click
+        warningDiv.innerHTML = `
+          <div class="warning-banner">
+            ⚠️ شما فایل را مستقیماً از روی دیسک باز کرده‌اید (<code>file://</code>). 
+            به دلیل سیاست‌های امنیتی مرورگر، تماس با API هوش مصنوعی (Groq) مسدود می‌شود و خطای "Failed to fetch" دیده خواهد شد.
+            <br><br>
+            <strong>✅ راه حل ساده:</strong> 
+            یک سرور محلی اجرا کنید. در پوشه فایل، ترمینال را باز کرده و دستور زیر را وارد کنید:
+            <br>
+            <code style="background:#fef3c7; padding:4px 8px; border-radius:6px;">python -m http.server 8080</code>
+            <br>
+            سپس در مرورگر به آدرس <code>http://localhost:8080</code> بروید. تمام قابلیت‌های هوش مصنوعی کار خواهند کرد.
+            <span class="close" onclick="this.parentElement.style.display='none'">✖</span>
+          </div>`;
+        // Disable AI buttons visually but keep them; they will show an alert when clicked
       }
     });
 
@@ -501,11 +511,9 @@
       });
     }
 
-    // Enhanced title search with automatic pruning using IMDb ID or year
     function smartTitleSearch(allLinks, item) {
       let raw = searchByTitleOnly(allLinks, item.title);
       if (raw.length <= 5) return raw;
-      // Too many false positives – filter by IMDb ID or year
       const id = item.id.toLowerCase();
       const year = item.year;
       let filtered = raw.filter(l => {
@@ -513,13 +521,14 @@
         const textLow = l.text.toLowerCase();
         return urlLow.includes(id) || textLow.includes(id) || urlLow.includes(year) || textLow.includes(year);
       });
-      return filtered.length ? filtered : raw.slice(0, 8); // fallback
+      return filtered.length ? filtered : raw.slice(0, 8);
     }
 
+    // AI function that never runs when aiBlocked = true
     async function callGroqAPI(systemPrompt, userText) {
-      if (aiBlocked || isFileProtocol) throw new Error("AI features require running from a local web server (not file://). Please use python -m http.server");
-      if(GROQ_API_KEY === "YOUR_GROQ_API_KEY_HERE") throw new Error("لطفاً کلید API گراک (Groq) را در سورس کد قرار دهید.");
-      
+      if (aiBlocked) {
+        throw new Error("AI features disabled because page is opened from file://. Please use a local web server (e.g., python -m http.server) and access via http://localhost");
+      }
       const url = `https://api.groq.com/openai/v1/chat/completions`;
       const payload = {
         model: "llama-3.3-70b-versatile",
@@ -549,12 +558,11 @@
     }
 
     async function searchWithAI(item, allLinks) {
-      if (aiBlocked || isFileProtocol) return null;
-      const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
-      const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title — not related titles or spin-offs. For TV series include only season/episode links for THIS show. If nothing matches, output NONE. Output indices or NONE only — no explanation.`;
-      const userText = `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`;
-      
+      if (aiBlocked) return null;
       try {
+        const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
+        const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title — not related titles or spin-offs. For TV series include only season/episode links for THIS show. If nothing matches, output NONE. Output indices or NONE only — no explanation.`;
+        const userText = `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`;
         const responseText = await callGroqAPI(systemPrompt, userText);
         const answer = responseText.trim();
         if (/^none$/i.test(answer) || answer === '') return [];
@@ -562,8 +570,8 @@
         return indices.map(i => allLinks[i]);
       } catch (e) {
         console.error("AI link search failed:", e);
+        return null;
       }
-      return null;
     }
 
     async function matchAndExtractLinks(imdbID) {
@@ -732,7 +740,10 @@
     }
 
     async function translatePlotInline(id) {
-      if (aiBlocked || isFileProtocol) { alert("برای ترجمه داستان فایل را از طریق HTTP سرور اجرا کنید."); return; }
+      if (aiBlocked) {
+        alert("برای ترجمه داستان، فایل را از طریق HTTP سرور اجرا کنید (مثال: python -m http.server)");
+        return;
+      }
       const item = state.items.find(i => i.id === id);
       if (!item) return;
 
@@ -1063,7 +1074,10 @@
     }
 
     async function generateSimilarRecommendations(id) {
-      if (aiBlocked || isFileProtocol) { alert("پیشنهاد مشابه AI نیاز به اجرای فایل از طریق HTTP سرور دارد."); return; }
+      if (aiBlocked) {
+        alert("پیشنهاد مشابه AI نیاز به اجرای فایل از طریق HTTP سرور دارد. لطفاً از دستور python -m http.server استفاده کنید.");
+        return;
+      }
       const item = state.items.find(i => i.id === id);
       if (!item) return;
 
@@ -1088,8 +1102,14 @@
     }
 
     async function generateGlobalAIAnalysis(forceRegen = false) {
-      if (aiBlocked || isFileProtocol) { alert("تحلیل هوشمند کل آرشیو نیاز به اجرای فایل از طریق HTTP سرور دارد."); return; }
-      if (!forceRegen && state.globalAiCache) return;
+      if (aiBlocked) {
+        alert("تحلیل هوشمند کل آرشیو نیاز به اجرای فایل از طریق HTTP سرور دارد. لطفاً از دستور python -m http.server استفاده کنید.");
+        return;
+      }
+      if (!forceRegen && state.globalAiCache) {
+        document.getElementById("globalAiResponse").innerHTML = state.globalAiCache;
+        return;
+      }
       const btn         = document.querySelector(".ai-global-panel .btn");
       const responseBox = document.getElementById("globalAiResponse");
       btn.disabled = true;
