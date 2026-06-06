@@ -854,29 +854,43 @@ async function callGroqAPI(systemPrompt, userText) {
 
     // --- RESTORED EXACT ORIGINAL OMDB FETCH LOGIC ---
     function handleSearch(query) {
-      clearTimeout(searchDebounceTimer);
-      const dropdown = document.getElementById("searchDropdown");
-      if (!query || query.trim().length < 3) { dropdown.style.display = "none"; return; }
-
-      searchDebounceTimer = setTimeout(async () => {
-        try {
-          let res  = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&s=${encodeURIComponent(query.trim())}`);
-          let data = await res.json();
-          if (data.Response === "True" && data.Search) {
-            dropdown.innerHTML = data.Search.map(item => `
-              <div class="search-item" onclick="fetchItemFullDetails('${item.imdbID}')">
-                <img src="${item.Poster !== 'N/A' ? item.Poster : 'https://via.placeholder.com/45x65?text=No'}" alt="">
-                <div class="info"><h4>${item.Title}</h4><p>${item.Year} • [${translateType(item.Type)}]</p></div>
-              </div>
-            `).join('');
-            dropdown.style.display = "block";
-          } else {
-            dropdown.innerHTML = `<div style="padding:15px;font-size:13px;color:var(--text-muted);text-align:center;">نتیجه‌ای یافت نشد.</div>`;
-            dropdown.style.display = "block";
-          }
-        } catch (error) { console.error(error); }
-      }, 400);
+    const dropdown = document.getElementById("searchDropdown");
+    const searchInput = document.getElementById("searchInput");
+    
+    // Clear dropdown if query is empty
+    if (!query || query.trim() === "") {
+        dropdown.style.display = "none";
+        dropdown.innerHTML = "";
+        return;
     }
+
+    const q = query.toLowerCase().trim();
+
+    // FILTER LOGIC:
+    // This checks both the TITLE and the IMDB ID for every item in your library
+    const results = state.items.filter(item => {
+        const titleMatch = item.title.toLowerCase().includes(q);
+        const idMatch = item.imdbID && item.imdbID.toLowerCase() === q; // Strict ID match
+        
+        return titleMatch || idMatch;
+    });
+
+    // Render results
+    if (results.length > 0) {
+        dropdown.style.display = "block";
+        dropdown.innerHTML = results.map(item => `
+            <div class="search-item" onclick="selectMovie('${item.id}')">
+                <img src="${item.poster || 'placeholder.jpg'}" onerror="this.src='placeholder.jpg'">
+                <div class="info">
+                    <h4>${item.title} (${item.year})</h4>
+                    <p>${item.imdbID ? 'ID: ' + item.imdbID : 'No ID available'}</p>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        dropdown.style.display = "none";
+    }
+}
 
     function clearSearchInput() { document.getElementById("searchInput").value = ""; document.getElementById("searchDropdown").style.display = "none"; }
     function translateType(type) { if (type === "movie") return "فیلم سینمایی"; if (type === "series") return "سریال تلویزیونی"; return type; }
