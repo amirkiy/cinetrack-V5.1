@@ -348,7 +348,7 @@
     // --- API Keys ---
     const OMDB_KEY = "4b0254f3";
     // 🔑 Replace with your actual Groq API key (get from https://console.groq.com)
-    const GROQ_API_KEY = "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"; 
+    const AVALAI_API_KEY = "Avalai : aa-BoDE4elEsyeS4ydxyyV1TJgkltS70BizRv8hI5numtKA72Gq"; 
 
     // --- IndexedDB for Persistent Offline Archive Storage ---
     const DB_NAME = 'CineTrackDB';
@@ -490,7 +490,7 @@
     }
 
     // --- Groq API Engine (with better error handling) ---
-    async function callGroqAPI(systemPrompt, userText) {
+    async function callAVALAIAPI(systemPrompt, userText) {
       let key = GROQ_API_KEY.trim();
       if (!key || key === "YOUR_GROQ_API_KEY_HERE") {
         throw new Error("⚠️ کلید API گراک (Groq) تنظیم نشده است. لطفاً آن را در const GROQ_API_KEY قرار دهید. دریافت کلید: https://console.groq.com");
@@ -795,7 +795,7 @@
       const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title — not related titles or spin-offs. For TV series include only season/episode links for THIS show. If nothing matches, output NONE. Output indices or NONE only — no explanation.`;
       const userText = `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`;
       try {
-        const responseText = await callGroqAPI(systemPrompt, userText);
+        const responseText = await callAVALAIAPI(systemPrompt, userText);
         const answer = responseText.trim();
         if (/^none$/i.test(answer) || answer === '') return [];
         const indices = answer.split(/[\s,،]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0 && n < allLinks.length);
@@ -982,7 +982,7 @@
       const sysPrompt = "You are an expert movie translator. Translate the following English movie plot into natural, fluent Persian (Farsi). Output ONLY the translation. Do not use Markdown blocks.";
       
       try {
-        const translatedText = await callGroqAPI(sysPrompt, item.plot);
+        const translatedText = await callAVALAIAPI(sysPrompt, item.plot);
         if (translatedText) {
           item.plotFa = translatedText.trim();
           saveStateToStorage(); renderHero();
@@ -1132,7 +1132,7 @@
       const userText = `Title: "${item.title}". Type: ${item.type}. Genre: ${item.genre}. Plot: ${item.plot}. Give 5 recommendations.`;
       
       try {
-        const analysis = await callGroqAPI(sysPrompt, userText);
+        const analysis = await callAVALAIAPI(sysPrompt, userText);
         responseBox.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:6px;">
             <h4 style="font-size:13.5px;font-weight:800;color:var(--text-main);">🤖 عناوین مشابه (تحلیل AI)</h4>
@@ -1159,7 +1159,7 @@
       const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. Give highly personalized structural feedback STRICTLY IN PERSIAN (FARSI). NEVER write in English. Highlight patterns in their taste, note their favorite genres based on the data, and kindly suggest a few masterpiece titles they are missing. Use beautiful formatting with emojis so it looks great on a webpage.`;
       
       try {
-        const analysis = await callGroqAPI(sysPrompt, JSON.stringify(safeData));
+        const analysis = await callAVALAIAPI(sysPrompt, JSON.stringify(safeData));
         state.globalAiCache = analysis;
         localStorage.setItem("cinetrack_global_ai_cache", analysis);
         responseBox.innerHTML = analysis;
