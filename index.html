@@ -22,10 +22,9 @@
       --blue: #2563eb;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif;
-        transition: background-color 0.2s ease, border-color 0.2s ease; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; }
 
-    body { background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden;
+    body { background-color: var(--bg-main); color: var(--text-main); overflow-x: auto;
            padding-bottom: 60px; -webkit-font-smoothing: antialiased; }
 
     header {
@@ -193,6 +192,9 @@
     .stage-spinner { width: 16px; height: 16px; border: 2px solid rgba(14,165,233,0.2); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .warning-banner { background: #fffbeb; border: 1px solid #fde047; color: #b45309; padding: 12px 20px; border-radius: 12px; margin: 15px 30px 0 30px; font-size: 13px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .warning-banner .close { margin-right: auto; cursor: pointer; font-weight: bold; }
+
     @media (max-width: 768px) {
       .hero-content { flex-direction: column; align-items: center; }
       .controls-bar { flex-direction: column; align-items: stretch; }
@@ -219,6 +221,8 @@
       <button class="btn btn-secondary" onclick="openSettingsModal()">⚙️ تنظیمات سیستم</button>
     </div>
   </header>
+
+  <div id="corsWarning" style="display:none;"></div>
 
   <section class="section-title">🎯 پیشنهاد تماشای بعدی</section>
   <section class="watch-next-container" id="watchNextContainer">
@@ -345,8 +349,22 @@
     // --- Original Working Configuration ---
     const OMDB_KEY = "4b0254f3";
     
-    // --- NEW PUBLIC AI ENGINE CONFIGURATION ---
-const GROQ_API_KEY = "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"; 
+    // --- NEW PUBLIC AI ENGINE CONFIGURATION (Groq) ---
+    const GROQ_API_KEY = "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"; 
+
+    // --- Check if running from file:// ---
+    const isFileProtocol = window.location.protocol === 'file:';
+    let aiBlocked = false;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (isFileProtocol) {
+        const warningDiv = document.getElementById('corsWarning');
+        warningDiv.style.display = 'block';
+        warningDiv.innerHTML = `<div class="warning-banner">⚠️ شما فایل را مستقیماً از روی دیسک باز کرده‌اید (file://). به دلیل سیاست‌های امنیتی مرورگر، تماس با API هوش مصنوعی (Groq) مسدود می‌شود. لطفاً فایل را با یک سرور محلی اجرا کنید، مثلاً: python -m http.server 8080 و سپس به http://localhost:8080 بروید تا همه قابلیت‌های AI کار کنند.<span class="close" onclick="this.parentElement.style.display='none'">✖</span></div>`;
+        aiBlocked = true;
+        // Disable AI buttons visually but keep them, they will show error on click
+      }
+    });
 
     // --- IndexedDB for Persistent Offline Archive Storage ---
     const DB_NAME = 'CineTrackDB';
@@ -474,63 +492,73 @@ const GROQ_API_KEY = "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";
     }
 
     function searchByBothStrict(allLinks, title, imdbID) {
-      const id  = imdbID.toLowerCase(); const rx  = buildTitleRegex(title);
+      const id = imdbID.toLowerCase(); const rx = buildTitleRegex(title);
       return allLinks.filter(l => {
-        const urlLow  = l.url.toLowerCase(); const textLow = l.text.toLowerCase();
+        const urlLow = l.url.toLowerCase(); const textLow = l.text.toLowerCase();
         const hasId = urlLow.includes(id) || textLow.includes(id);
         const hasTitle = rx.test(l.url) || rx.test(l.text);
         return hasId && hasTitle;
       });
     }
 
-    // --- NEW GROQ API ENGINE (No VPN Needed) ---
-async function callGroqAPI(systemPrompt, userText) {
-  if(GROQ_API_KEY === "YOUR_GROQ_API_KEY_HERE") {
-    throw new Error("⚠️ لطفاً کلید API گراک (Groq) را در سورس کد قرار دهید.");
-  }
-  
-  const url = `https://api.groq.com/openai/v1/chat/completions`;
-  const payload = {
-    model: "llama-3.3-70b-versatile", // Very powerful and fast model
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userText }
-    ],
-    temperature: 0.4
-  };
+    // Enhanced title search with automatic pruning using IMDb ID or year
+    function smartTitleSearch(allLinks, item) {
+      let raw = searchByTitleOnly(allLinks, item.title);
+      if (raw.length <= 5) return raw;
+      // Too many false positives – filter by IMDb ID or year
+      const id = item.id.toLowerCase();
+      const year = item.year;
+      let filtered = raw.filter(l => {
+        const urlLow = l.url.toLowerCase();
+        const textLow = l.text.toLowerCase();
+        return urlLow.includes(id) || textLow.includes(id) || urlLow.includes(year) || textLow.includes(year);
+      });
+      return filtered.length ? filtered : raw.slice(0, 8); // fallback
+    }
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${GROQ_API_KEY}`
-    },
-    body: JSON.stringify(payload)
-  });
-  
-  const data = await res.json();
-  if (data.error) {
-    throw new Error(data.error.message);
-  }
-  return data.choices[0].message.content;
-}
-
-    // --- RESTORED & ENHANCED ORIGINAL LINK FINDING LOGIC ---
-    async function searchWithAI(item, allLinks) {
-      const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
+    async function callGroqAPI(systemPrompt, userText) {
+      if (aiBlocked || isFileProtocol) throw new Error("AI features require running from a local web server (not file://). Please use python -m http.server");
+      if(GROQ_API_KEY === "YOUR_GROQ_API_KEY_HERE") throw new Error("لطفاً کلید API گراک (Groq) را در سورس کد قرار دهید.");
       
-      // Restored the exact original prompt structure that worked well, pointed at Gemini
+      const url = `https://api.groq.com/openai/v1/chat/completions`;
+      const payload = {
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userText }
+        ],
+        temperature: 0.4
+      };
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`HTTP ${res.status}: ${errText.slice(0,100)}`);
+      }
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      return data.choices[0].message.content;
+    }
+
+    async function searchWithAI(item, allLinks) {
+      if (aiBlocked || isFileProtocol) return null;
+      const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
       const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title — not related titles or spin-offs. For TV series include only season/episode links for THIS show. If nothing matches, output NONE. Output indices or NONE only — no explanation.`;
       const userText = `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`;
       
       try {
         const responseText = await callGroqAPI(systemPrompt, userText);
         const answer = responseText.trim();
-        
-        // Restored original parsing logic for perfect compatibility
         if (/^none$/i.test(answer) || answer === '') return [];
         const indices = answer.split(/[\s,،]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0 && n < allLinks.length);
-        
         return indices.map(i => allLinks[i]);
       } catch (e) {
         console.error("AI link search failed:", e);
@@ -560,23 +588,22 @@ async function callGroqAPI(systemPrompt, userText) {
       matches = searchByImdbId(allLinks, imdbID);
       if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🆔 یافت‌شده با کد IMDb: <b>${imdbID}</b>`);
 
-      stageMsg('۲', `جستجو با نام دقیق: ${item.title}`);
-      await tick();
-      matches = searchByTitleOnly(allLinks, item.title);
-      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤 یافت‌شده با نام: <b>${item.title}</b>`);
-
-      stageMsg('۳', 'جستجوی ترکیبی — تطابق هم‌زمان کد و نام');
+      stageMsg('۲', `جستجو با نام + کد IMDb: ${item.title}`);
       await tick();
       matches = searchByBothStrict(allLinks, item.title, imdbID);
-      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 یافت‌شده با تطابق ترکیبی (کد + نام)`);
+      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 تطابق ترکیبی (کد + نام)`);
+
+      stageMsg('۳', `جستجوی هوشمند نام (با فیلتر خودکار): ${item.title}`);
+      await tick();
+      matches = smartTitleSearch(allLinks, item);
+      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤 یافت‌شده با نام (فیلتر شده با سال/کد)`);
 
       stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با موتور هوشمند ابری...');
       await tick();
 
       const aiResult = await searchWithAI(item, allLinks);
-
       if (aiResult === null) {
-        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ ارتباط با هوش مصنوعی مقدور نبود (احتمال شلوغی شبکه عمومی).</div>`;
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ ارتباط با هوش مصنوعی ممکن نیست (فایل را از طریق HTTP سرور اجرا کنید).</div>`;
         return;
       }
       if (aiResult.length === 0) {
@@ -705,6 +732,7 @@ async function callGroqAPI(systemPrompt, userText) {
     }
 
     async function translatePlotInline(id) {
+      if (aiBlocked || isFileProtocol) { alert("برای ترجمه داستان فایل را از طریق HTTP سرور اجرا کنید."); return; }
       const item = state.items.find(i => i.id === id);
       if (!item) return;
 
@@ -712,7 +740,6 @@ async function callGroqAPI(systemPrompt, userText) {
       if (plotEl) plotEl.innerHTML = `<span style="color:var(--cyan); font-weight:600;">⏳ در حال ترجمه داستان به فارسی...</span>`;
       
       const sysPrompt = "You are an expert movie translator. Translate the following English movie plot into natural, fluent Persian (Farsi). Output ONLY the translation. Do not use Markdown blocks.";
-      
       try {
         const translatedText = await callGroqAPI(sysPrompt, item.plot);
         if (translatedText) {
@@ -852,7 +879,6 @@ async function callGroqAPI(systemPrompt, userText) {
       container.innerHTML = `<div class="stat-card"><h3>${total}</h3><p>کل عناوین</p></div><div class="stat-card"><h3>${watching}</h3><p>⏳ در حال تماشا</p></div><div class="stat-card"><h3>${completed}</h3><p>✅ تمام شده</p></div><div class="stat-card"><h3>⭐ ${imdbAvg}</h3><p>میانگین کل IMDb</p></div><div class="stat-card"><h3>★ ${userAvg}</h3><p>میانگین امتیازهای من</p></div><div class="stat-card"><h3 style="font-size:15px;font-weight:800;padding-top:6px;color:var(--cyan);">${favoriteGenre}</h3><p>🎭 ژانر محبوب</p></div>`;
     }
 
-    // --- RESTORED EXACT ORIGINAL OMDB FETCH LOGIC ---
     function handleSearch(query) {
       clearTimeout(searchDebounceTimer);
       const dropdown = document.getElementById("searchDropdown");
@@ -887,7 +913,6 @@ async function callGroqAPI(systemPrompt, userText) {
       if (state.omdbCache[imdbID]) { movieData = state.omdbCache[imdbID]; } 
       else {
         try {
-          // Exact logic from the original version ensuring clean full plots
           let res = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&i=${imdbID}&plot=full`);
           movieData = await res.json();
           if (movieData.Response === "True") { state.omdbCache[imdbID] = movieData; localStorage.setItem("cinetrack_omdb_cache", JSON.stringify(state.omdbCache)); }
@@ -1037,8 +1062,8 @@ async function callGroqAPI(systemPrompt, userText) {
       container.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;cursor:pointer;" onclick="selectGridItem('${top.id}')"><div style="display:flex;align-items:center;gap:15px;"><img src="${top.poster !== 'N/A' ? top.poster : 'https://via.placeholder.com/50x70?text=No'}" style="width:36px;height:50px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"><div><h4 style="font-weight:700;font-size:14.5px;">${top.title}</h4><p style="font-size:12px;color:var(--text-muted);margin-top:2px;">وضعیت: ${translateStatus(top.status)} | ⭐ IMDb: ${top.imdbRating}</p></div></div><button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">🎯 تمرکز روی این عنوان</button></div>`;
     }
 
-    // --- RESTORED PERSONALIZED AI FEATURES ---
     async function generateSimilarRecommendations(id) {
+      if (aiBlocked || isFileProtocol) { alert("پیشنهاد مشابه AI نیاز به اجرای فایل از طریق HTTP سرور دارد."); return; }
       const item = state.items.find(i => i.id === id);
       if (!item) return;
 
@@ -1046,7 +1071,6 @@ async function callGroqAPI(systemPrompt, userText) {
       responseBox.style.display = "block";
       responseBox.innerHTML = `<span style="color:var(--cyan);font-weight:600;">⏳ در حال تحلیل هوشمند عناوین مشابه...</span>`;
       
-      // Restored original persona, explicitly requested rich formatting
       const sysPrompt = `You are CineTrack AI Assistant. Recommend 5 movies or TV shows closely similar to the user's selected title. SPEAK STRICTLY IN PERSIAN (FARSI). Do not use English text. Feel free to format your response beautifully with emojis and short bullet points to make it readable.`;
       const userText = `Title: "${item.title}". Type: ${item.type}. Genre: ${item.genre}. Plot: ${item.plot}. Give 5 recommendations.`;
       
@@ -1064,6 +1088,7 @@ async function callGroqAPI(systemPrompt, userText) {
     }
 
     async function generateGlobalAIAnalysis(forceRegen = false) {
+      if (aiBlocked || isFileProtocol) { alert("تحلیل هوشمند کل آرشیو نیاز به اجرای فایل از طریق HTTP سرور دارد."); return; }
       if (!forceRegen && state.globalAiCache) return;
       const btn         = document.querySelector(".ai-global-panel .btn");
       const responseBox = document.getElementById("globalAiResponse");
@@ -1071,8 +1096,6 @@ async function callGroqAPI(systemPrompt, userText) {
       responseBox.innerText = "⏳ در حال آنالیز آماری آرشیو. لطفاً صبور باشید...";
       
       const safeData = state.items.map(i => ({ title: i.title, type: i.type, genre: i.genre, rating: i.imdbRating }));
-      
-      // Restored original exact persona "CineTrack AI Brain" to get the personalized insight feeling
       const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. Give highly personalized structural feedback STRICTLY IN PERSIAN (FARSI). NEVER write in English. Highlight patterns in their taste, note their favorite genres based on the data, and kindly suggest a few masterpiece titles they are missing. Use beautiful formatting with emojis so it looks great on a webpage.`;
       
       try {
