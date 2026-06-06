@@ -485,7 +485,7 @@ const GROQ_API_KEY = "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";
 
     // --- NEW GROQ API ENGINE (No VPN Needed) ---
 async function callGroqAPI(systemPrompt, userText) {
-  if(GROQ_API_KEY === "YOUR_GROQ_API_KEY_HERE") {
+  if(GROQ_API_KEY === "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") {
     throw new Error("⚠️ لطفاً کلید API گراک (Groq) را در سورس کد قرار دهید.");
   }
   
@@ -855,10 +855,8 @@ async function callGroqAPI(systemPrompt, userText) {
     // --- RESTORED EXACT ORIGINAL OMDB FETCH LOGIC ---
     function handleSearch(query) {
     const dropdown = document.getElementById("searchDropdown");
-    const searchInput = document.getElementById("searchInput");
     
-    // Clear dropdown if query is empty
-    if (!query || query.trim() === "") {
+    if (!query || query.trim().length < 2) {
         dropdown.style.display = "none";
         dropdown.innerHTML = "";
         return;
@@ -867,28 +865,29 @@ async function callGroqAPI(systemPrompt, userText) {
     const q = query.toLowerCase().trim();
 
     // FILTER LOGIC:
-    // This checks both the TITLE and the IMDB ID for every item in your library
+    // It checks if your query is an ID OR if it is a title match.
+    // This allows you to search by "Lost" (title) or "tt0413573" (ID).
     const results = state.items.filter(item => {
-        const titleMatch = item.title.toLowerCase().includes(q);
+        const titleMatch = item.title && item.title.toLowerCase().includes(q);
         const idMatch = item.imdbID && item.imdbID.toLowerCase() === q; // Strict ID match
         
         return titleMatch || idMatch;
     });
 
-    // Render results
     if (results.length > 0) {
         dropdown.style.display = "block";
         dropdown.innerHTML = results.map(item => `
             <div class="search-item" onclick="selectMovie('${item.id}')">
                 <img src="${item.poster || 'placeholder.jpg'}" onerror="this.src='placeholder.jpg'">
                 <div class="info">
-                    <h4>${item.title} (${item.year})</h4>
+                    <h4>${item.title} (${item.year || ''})</h4>
                     <p>${item.imdbID ? 'ID: ' + item.imdbID : 'No ID available'}</p>
                 </div>
             </div>
         `).join('');
     } else {
         dropdown.style.display = "none";
+        dropdown.innerHTML = "";
     }
 }
 
