@@ -424,7 +424,7 @@
       renderWatchNext();
     }
 
-    /* ===================== ARCHIVE MATCHING ENGINE (3-STAGE SMART SEARCH) ===================== */
+    /* ===================== ARCHIVE MATCHING ENGINE (4-STAGE SMART SEARCH) ===================== */
     function handleArchiveHtmlUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -450,24 +450,80 @@
       })).filter(l => l.url && l.url.length > 5);
     }
 
-    function searchByTitle(allLinks, title) {
-      const words = title.toLowerCase().replace(/[^a-z0-9\u0600-\u06ff\s]/g, '').split(/\s+/).filter(w => w.length > 2);
-      if (words.length === 0) return [];
-      return allLinks.filter(l => {
-        const combined = (l.text + ' ' + l.url).toLowerCase();
-        const matchCount = words.filter(w => combined.includes(w)).length;
-        return matchCount >= Math.ceil(words.length * 0.6);
-      });
+    // Build a regex from a title that matches URL slugs and text:
+    // "Breaking Bad" → /breaking[-_.\s]bad/i
+    // Handles multi-word titles, ignores punctuation/articles
+    function buildTitleRegex(title) {
+      const cleaned = title.toLowerCase()
+        .replace(/[''':!?,.()\[\]]/g, '')
+        .replace(/\s+/g, ' ').trim();
+      const words = cleaned.split(' ').filter(w => w.length > 0);
+      // Join words with flexible separator (hyphen, underscore, dot, space)
+      const pattern = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[-_. ]?');
+      return new RegExp(pattern, 'i');
     }
 
-    function searchByTitleAndImdb(allLinks, title, imdbID) {
-      const byTitle = searchByTitle(allLinks, title);
+    // Does a link contain a season/episode marker? (S01E01, Season 1, فصل ۱, etc.)
+    function hasSeriesMarker(link) {
+      const combined = (link.text + ' ' + link.url).toLowerCase();
+      return /s\d{1,2}e\d{1,2}|\bs\d{2}\b|season[\s._-]*\d|فصل[\s]*\d/.test(combined);
+    }
+
+    // STAGE 1: IMDb code exact search — the most precise, no false positives
+    function searchByImdbId(allLinks, imdbID) {
       const cleanId = imdbID.toLowerCase();
-      // Combine: links that match title AND imdb, OR strictly match imdb alone
-      const withId = byTitle.filter(l => (l.text + ' ' + l.url).toLowerCase().includes(cleanId));
-      if (withId.length > 0) return withId;
-      // Fallback: imdb ID alone across all links
-      return allLinks.filter(l => (l.text + ' ' + l.url).toLowerCase().includes(cleanId));
+      return allLinks.filter(l =>
+        l.url.toLowerCase().includes(cleanId) || l.text.toLowerCase().includes(cleanId)
+      );
+    }
+
+    // STAGE 2: Combined — IMDb code OR title slug match, then deduplicate.
+    // For series: filter combined results to those with season markers to exclude
+    // related movies (e.g. "El Camino" won't have S01E01 markers).
+    function searchCombined(allLinks, title, imdbID, itemType) {
+      const cleanId = imdbID.toLowerCase();
+      const titleRx = buildTitleRegex(title);
+
+      // Gather all links matching IMDb code
+      const byId = allLinks.filter(l =>
+        l.url.toLowerCase().includes(cleanId) || l.text.toLowerCase().includes(cleanId)
+      );
+
+      // Gather all links matching title slug in URL or text
+      const byTitle = allLinks.filter(l => titleRx.test(l.url) || titleRx.test(l.text));
+
+      // Deduplicate union
+      const seen = new Set();
+      const union = [...byId, ...byTitle].filter(l => {
+        const key = l.url;
+        if (seen.has(key)) return false;
+        seen.add(key); return true;
+      });
+
+      if (itemType === 'series' && union.length > 0) {
+        // For series: prefer links that have season markers — cuts out movie spin-offs
+        const withMarker = union.filter(hasSeriesMarker);
+        // If we found series-marked links, return those; otherwise fall through
+        if (withMarker.length > 0) return withMarker;
+      }
+
+      return union;
+    }
+
+    // STAGE 3: Title-only with strict slug matching + series marker requirement
+    function searchByTitleStrict(allLinks, title, itemType) {
+      const titleRx = buildTitleRegex(title);
+      const matches = allLinks.filter(l => titleRx.test(l.url) || titleRx.test(l.text));
+
+      if (itemType === 'series' && matches.length > 0) {
+        // Strict: only return links that also have a season/episode marker
+        const withMarker = matches.filter(hasSeriesMarker);
+        if (withMarker.length > 0) return withMarker;
+        // If no markers found at all, return raw title matches (some archives don't mark)
+        return matches;
+      }
+
+      return matches;
     }
 
     async function searchWithAI(item, allLinks) {
@@ -475,8 +531,11 @@
       const model = localStorage.getItem("cinetrack_or_model");
       if (!key || !model) return null;
 
-      // Build a condensed list of links (max 300 for token efficiency)
-      const linkList = allLinks.slice(0, 300).map((l, i) => `${i}: [${l.text.slice(0,80)}] ${l.url.slice(0,120)}`).join('\n');
+      // Build condensed link list — first try a broader scan of all links (up to 500)
+      const linkList = allLinks.slice(0, 500).map((l, i) =>
+        `${i}: [${l.text.slice(0,80)}] ${l.url.slice(0,150)}`
+      ).join('\n');
+
       try {
         const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
@@ -484,17 +543,25 @@
           body: JSON.stringify({
             model: model,
             messages: [
-              { role: "system", content: "You are a download link finder. Given a list of links and a movie/series title with IMDb ID, return ONLY the line indices (comma-separated numbers) of links that belong to this title. If none match, return 'NONE'. Output ONLY the numbers or NONE." },
-              { role: "user", content: `Title: "${item.title}" | IMDb ID: ${item.id} | Year: ${item.year}\n\nLinks:\n${linkList}` }
+              {
+                role: "system",
+                content: `You are a precise download link matcher. Given a numbered list of links from an archive page and a title with its IMDb ID, return ONLY the indices (comma-separated) of links that specifically belong to this exact title — NOT related titles or spin-offs. For TV series, only include links with season/episode markers. If none match, return NONE. Output numbers or NONE only — no explanation.`
+              },
+              {
+                role: "user",
+                content: `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`
+              }
             ],
-            max_tokens: 200
+            max_tokens: 300
           })
         });
         const result = await res.json();
         if (result.choices && result.choices[0]) {
           const answer = result.choices[0].message.content.trim();
-          if (answer === 'NONE' || answer === '') return [];
-          const indices = answer.split(/[\s,،]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0 && n < allLinks.length);
+          if (/^none$/i.test(answer) || answer === '') return [];
+          const indices = answer.split(/[\s,،]+/)
+            .map(n => parseInt(n.trim()))
+            .filter(n => !isNaN(n) && n >= 0 && n < allLinks.length);
           return indices.map(i => allLinks[i]);
         }
       } catch (e) { console.error("AI link search failed:", e); }
@@ -511,44 +578,57 @@
         return;
       }
 
-      resultsDiv.innerHTML = `<div style="display:flex; align-items:center; gap:10px; padding:12px; background:#f0f9ff; border:1px solid rgba(14,165,233,0.2); border-radius:10px; font-size:13px; color:var(--cyan); font-weight:600;">⏳ در حال جستجو در آرشیو...</div>`;
+      resultsDiv.innerHTML = `<div style="display:flex; align-items:center; gap:10px; padding:12px; background:#f0f9ff; border:1px solid rgba(14,165,233,0.2); border-radius:10px; font-size:13px; color:var(--cyan); font-weight:600;">🔍 مرحله ۱: جستجو با کد IMDb...</div>`;
+      await new Promise(r => setTimeout(r, 0)); // allow UI to paint
 
       const allLinks = getAllArchiveLinks();
       let matches = [];
       let strategyLabel = '';
 
-      // Stage 1: Search by title name
-      matches = searchByTitle(allLinks, item.title);
-      strategyLabel = `🔤 جستجو بر اساس نام: <b>${item.title}</b>`;
-
-      // Stage 2: Too many results → narrow with IMDb ID
-      if (matches.length > 10) {
-        const narrowed = searchByTitleAndImdb(allLinks, item.title, imdbID);
-        if (narrowed.length > 0) {
-          matches = narrowed;
-          strategyLabel = `🔤+🆔 جستجوی ترکیبی: نام + کد IMDb <b>(${imdbID})</b>`;
-        }
-        // else keep title-only results
+      // ── STAGE 1: IMDb code only ────────────────────────────────────────────
+      matches = searchByImdbId(allLinks, imdbID);
+      if (matches.length > 0) {
+        strategyLabel = `🆔 یافت با کد IMDb: <b>${imdbID}</b>`;
+        renderExtractedLinks(matches, item, resultsDiv, strategyLabel);
+        return;
       }
 
-      // Stage 3: No results → AI fallback
-      if (matches.length === 0) {
-        strategyLabel = `🤖 هوش مصنوعی در حال بررسی آرشیو...`;
-        resultsDiv.innerHTML = `<div style="display:flex; align-items:center; gap:10px; padding:12px; background:#f0f9ff; border:1px solid rgba(14,165,233,0.2); border-radius:10px; font-size:13px; color:var(--cyan); font-weight:600;">🤖 نتیجه‌ای یافت نشد — در حال مشورت با هوش مصنوعی...</div>`;
-        const aiResult = await searchWithAI(item, allLinks);
-        if (aiResult === null) {
-          resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06); border:1px solid #f87171; padding:15px; border-radius:12px; font-size:13px; color:#b91c1c;">⚠️ لینکی در آرشیو یافت نشد و کلید OpenRouter برای جستجوی AI تنظیم نشده است.</div>`;
-          return;
-        }
-        if (aiResult.length === 0) {
-          resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06); border:1px solid #f87171; padding:15px; border-radius:12px; font-size:13px; color:#b91c1c;">⚠️ هیچ لینکی برای این عنوان در آرشیو پیدا نشد. (هر سه روش جستجو امتحان شد)</div>`;
-          return;
-        }
-        matches = aiResult;
-        strategyLabel = `🤖 یافت‌شده توسط هوش مصنوعی`;
+      // ── STAGE 2: IMDb code OR title slug combined (series-marker filtered) ─
+      resultsDiv.innerHTML = `<div style="display:flex; align-items:center; gap:10px; padding:12px; background:#f0f9ff; border:1px solid rgba(14,165,233,0.2); border-radius:10px; font-size:13px; color:var(--cyan); font-weight:600;">🔍 مرحله ۲: جستجوی ترکیبی کد + نام...</div>`;
+      await new Promise(r => setTimeout(r, 0));
+
+      matches = searchCombined(allLinks, item.title, imdbID, item.type);
+      if (matches.length > 0) {
+        strategyLabel = `🔤+🆔 جستجوی ترکیبی: کد IMDb + نام <b>${item.title}</b>`;
+        renderExtractedLinks(matches, item, resultsDiv, strategyLabel);
+        return;
       }
 
-      renderExtractedLinks(matches, item, resultsDiv, strategyLabel);
+      // ── STAGE 3: Title slug only with series-marker filter ─────────────────
+      resultsDiv.innerHTML = `<div style="display:flex; align-items:center; gap:10px; padding:12px; background:#f0f9ff; border:1px solid rgba(14,165,233,0.2); border-radius:10px; font-size:13px; color:var(--cyan); font-weight:600;">🔍 مرحله ۳: جستجو با نام دقیق...</div>`;
+      await new Promise(r => setTimeout(r, 0));
+
+      matches = searchByTitleStrict(allLinks, item.title, item.type);
+      if (matches.length > 0) {
+        strategyLabel = `🔤 جستجوی نام دقیق: <b>${item.title}</b>`;
+        renderExtractedLinks(matches, item, resultsDiv, strategyLabel);
+        return;
+      }
+
+      // ── STAGE 4: AI fallback ───────────────────────────────────────────────
+      resultsDiv.innerHTML = `<div style="display:flex; align-items:center; gap:10px; padding:12px; background:#f0f9ff; border:1px solid rgba(14,165,233,0.2); border-radius:10px; font-size:13px; color:var(--cyan); font-weight:600;">🤖 مرحله ۴: مشورت با هوش مصنوعی...</div>`;
+      await new Promise(r => setTimeout(r, 0));
+
+      const aiResult = await searchWithAI(item, allLinks);
+      if (aiResult === null) {
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06); border:1px solid #f87171; padding:15px; border-radius:12px; font-size:13px; color:#b91c1c;">⚠️ لینکی پیدا نشد. کلید OpenRouter برای مرحله ۴ (جستجوی AI) تنظیم نشده است.</div>`;
+        return;
+      }
+      if (aiResult.length === 0) {
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06); border:1px solid #f87171; padding:15px; border-radius:12px; font-size:13px; color:#b91c1c;">⚠️ هیچ لینکی برای این عنوان در آرشیو یافت نشد. (هر ۴ مرحله جستجو امتحان شد)</div>`;
+        return;
+      }
+      renderExtractedLinks(aiResult, item, resultsDiv, `🤖 یافت‌شده توسط هوش مصنوعی`);
     }
 
     function renderExtractedLinks(matches, currentItem, resultsDiv, strategyLabel) {
