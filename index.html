@@ -346,9 +346,7 @@
     const OMDB_KEY = "4b0254f3";
     
     // --- NEW PUBLIC AI ENGINE CONFIGURATION ---
-    // Google Gemini 1.5 Flash - Free Tier (15 requests/min, 1500/day)
-    // Get your free key at: https://aistudio.google.com/
-    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"; 
+const GROQ_API_KEY = "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"; 
 
     // --- IndexedDB for Persistent Offline Archive Storage ---
     const DB_NAME = 'CineTrackDB';
@@ -485,32 +483,37 @@
       });
     }
 
-    // --- ENHANCED CLOUD AI ENGINE (GEMINI) ---
-    async function callGeminiAPI(systemPrompt, userText) {
-      if(GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
-        throw new Error("⚠️ برای استفاده از هوش مصنوعی، لطفاً کلید API را در سورس کد قرار دهید.");
-      }
-      
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-      const payload = {
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ parts: [{ text: userText }] }],
-        generationConfig: { temperature: 0.4 } // Slight creativity for Farsi flow
-      };
+    // --- NEW GROQ API ENGINE (No VPN Needed) ---
+async function callGroqAPI(systemPrompt, userText) {
+  if(GROQ_API_KEY === "YOUR_GROQ_API_KEY_HERE") {
+    throw new Error("⚠️ لطفاً کلید API گراک (Groq) را در سورس کد قرار دهید.");
+  }
+  
+  const url = `https://api.groq.com/openai/v1/chat/completions`;
+  const payload = {
+    model: "llama-3.3-70b-versatile", // Very powerful and fast model
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userText }
+    ],
+    temperature: 0.4
+  };
 
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      
-      const data = await res.json();
-      if (data.error) {
-        if (data.error.code === 429) throw new Error("ترافیک سرور هوش مصنوعی بالاست (محدودیت استفاده عمومی). لطفاً یک دقیقه دیگر تلاش کنید.");
-        throw new Error(data.error.message);
-      }
-      return data.candidates[0].content.parts[0].text;
-    }
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${GROQ_API_KEY}`
+    },
+    body: JSON.stringify(payload)
+  });
+  
+  const data = await res.json();
+  if (data.error) {
+    throw new Error(data.error.message);
+  }
+  return data.choices[0].message.content;
+}
 
     // --- RESTORED & ENHANCED ORIGINAL LINK FINDING LOGIC ---
     async function searchWithAI(item, allLinks) {
@@ -521,7 +524,7 @@
       const userText = `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`;
       
       try {
-        const responseText = await callGeminiAPI(systemPrompt, userText);
+        const responseText = await callGroqAPI(systemPrompt, userText);
         const answer = responseText.trim();
         
         // Restored original parsing logic for perfect compatibility
@@ -711,7 +714,7 @@
       const sysPrompt = "You are an expert movie translator. Translate the following English movie plot into natural, fluent Persian (Farsi). Output ONLY the translation. Do not use Markdown blocks.";
       
       try {
-        const translatedText = await callGeminiAPI(sysPrompt, item.plot);
+        const translatedText = await callGroqAPI(sysPrompt, item.plot);
         if (translatedText) {
           item.plotFa = translatedText.trim();
           saveStateToStorage(); renderHero();
@@ -1048,7 +1051,7 @@
       const userText = `Title: "${item.title}". Type: ${item.type}. Genre: ${item.genre}. Plot: ${item.plot}. Give 5 recommendations.`;
       
       try {
-        const analysis = await callGeminiAPI(sysPrompt, userText);
+        const analysis = await callGroqAPI(sysPrompt, userText);
         responseBox.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:6px;">
             <h4 style="font-size:13.5px;font-weight:800;color:var(--text-main);">🤖 عناوین مشابه (تحلیل AI)</h4>
@@ -1073,7 +1076,7 @@
       const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. Give highly personalized structural feedback STRICTLY IN PERSIAN (FARSI). NEVER write in English. Highlight patterns in their taste, note their favorite genres based on the data, and kindly suggest a few masterpiece titles they are missing. Use beautiful formatting with emojis so it looks great on a webpage.`;
       
       try {
-        const analysis = await callGeminiAPI(sysPrompt, JSON.stringify(safeData));
+        const analysis = await callGroqAPI(sysPrompt, JSON.stringify(safeData));
         state.globalAiCache = analysis;
         localStorage.setItem("cinetrack_global_ai_cache", analysis);
         responseBox.innerHTML = analysis;
