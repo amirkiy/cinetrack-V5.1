@@ -342,11 +342,12 @@
   </div>
 
   <script>
-    // --- Configuration & Hardcoded APIs ---
+    // --- Original Working Configuration ---
     const OMDB_KEY = "4b0254f3";
     
-    // REPLACE THIS WITH YOUR FREE GOOGLE GEMINI API KEY
-    // Get a free key at: https://aistudio.google.com/
+    // --- NEW PUBLIC AI ENGINE CONFIGURATION ---
+    // Google Gemini 1.5 Flash - Free Tier (15 requests/min, 1500/day)
+    // Get your free key at: https://aistudio.google.com/
     const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"; 
 
     // --- IndexedDB for Persistent Offline Archive Storage ---
@@ -377,9 +378,7 @@
           tx.oncomplete = () => resolve();
           tx.onerror = () => reject(tx.error);
         });
-      } catch (e) {
-        console.error("IndexedDB Save Error:", e);
-      }
+      } catch (e) { console.error("IndexedDB Save Error:", e); }
     }
 
     async function loadArchiveFromDB() {
@@ -391,10 +390,7 @@
           request.onsuccess = () => resolve(request.result || "");
           request.onerror = () => resolve("");
         });
-      } catch (e) {
-        console.error("IndexedDB Load Error:", e);
-        return "";
-      }
+      } catch (e) { console.error("IndexedDB Load Error:", e); return ""; }
     }
 
     let state = {
@@ -415,13 +411,8 @@
 
     async function init() {
       state.archiveHtmlSource = await loadArchiveFromDB();
-      renderDashboard();
-      extractAndRenderGenres();
-      renderGrid();
-      renderHero();
-      setupFilterButtonsUI();
-      renderWatchNext();
-      initSpeechRecognition();
+      renderDashboard(); extractAndRenderGenres(); renderGrid(); renderHero();
+      setupFilterButtonsUI(); renderWatchNext(); initSpeechRecognition();
 
       document.getElementById("uiLanguageSetting").value = state.uiLanguage;
       if (state.archiveHtmlSource) {
@@ -437,9 +428,7 @@
 
     function saveStateToStorage() {
       localStorage.setItem("cinetrack_ultimate_db", JSON.stringify(state.items));
-      renderDashboard();
-      extractAndRenderGenres();
-      renderWatchNext();
+      renderDashboard(); extractAndRenderGenres(); renderWatchNext();
     }
 
     function handleArchiveHtmlUpload(event) {
@@ -468,10 +457,7 @@
     }
 
     function buildTitleRegex(title) {
-      const cleaned = title.toLowerCase()
-        .replace(/[''':!?,.()\[\]]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
+      const cleaned = title.toLowerCase().replace(/[''':!?,.()\[\]]/g, '').replace(/\s+/g, ' ').trim();
       const words = cleaned.split(' ').filter(w => w.length > 0);
       const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
       const pattern = escaped.join('[-_.\\s]');
@@ -490,27 +476,26 @@
     }
 
     function searchByBothStrict(allLinks, title, imdbID) {
-      const id  = imdbID.toLowerCase();
-      const rx  = buildTitleRegex(title);
+      const id  = imdbID.toLowerCase(); const rx  = buildTitleRegex(title);
       return allLinks.filter(l => {
-        const urlLow  = l.url.toLowerCase();
-        const textLow = l.text.toLowerCase();
-        const hasId    = urlLow.includes(id)   || textLow.includes(id);
-        const hasTitle = rx.test(l.url)         || rx.test(l.text);
+        const urlLow  = l.url.toLowerCase(); const textLow = l.text.toLowerCase();
+        const hasId = urlLow.includes(id) || textLow.includes(id);
+        const hasTitle = rx.test(l.url) || rx.test(l.text);
         return hasId && hasTitle;
       });
     }
 
-    // --- REPLACED AI ENGINE WITH GOOGLE GEMINI ---
+    // --- ENHANCED CLOUD AI ENGINE (GEMINI) ---
     async function callGeminiAPI(systemPrompt, userText) {
       if(GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
-        throw new Error("لطفا کلید API جمنای را در کد وارد کنید.");
+        throw new Error("⚠️ برای استفاده از هوش مصنوعی، لطفاً کلید API را در سورس کد قرار دهید.");
       }
+      
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
       const payload = {
         systemInstruction: { parts: [{ text: systemPrompt }] },
         contents: [{ parts: [{ text: userText }] }],
-        generationConfig: { temperature: 0.3 }
+        generationConfig: { temperature: 0.4 } // Slight creativity for Farsi flow
       };
 
       const res = await fetch(url, {
@@ -520,23 +505,30 @@
       });
       
       const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
+      if (data.error) {
+        if (data.error.code === 429) throw new Error("ترافیک سرور هوش مصنوعی بالاست (محدودیت استفاده عمومی). لطفاً یک دقیقه دیگر تلاش کنید.");
+        throw new Error(data.error.message);
+      }
       return data.candidates[0].content.parts[0].text;
     }
 
+    // --- RESTORED & ENHANCED ORIGINAL LINK FINDING LOGIC ---
     async function searchWithAI(item, allLinks) {
       const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
-      const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title, return ONLY a strict JSON array containing the indices of links that belong EXACTLY to this title. If nothing matches, output []. No explanation, just the JSON array.`;
+      
+      // Restored the exact original prompt structure that worked well, pointed at Gemini
+      const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title — not related titles or spin-offs. For TV series include only season/episode links for THIS show. If nothing matches, output NONE. Output indices or NONE only — no explanation.`;
       const userText = `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`;
       
       try {
         const responseText = await callGeminiAPI(systemPrompt, userText);
-        // Clean markdown code blocks if gemini wraps it
-        const cleanJSON = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-        const indices = JSON.parse(cleanJSON);
+        const answer = responseText.trim();
         
-        if (!Array.isArray(indices) || indices.length === 0) return [];
-        return indices.filter(n => !isNaN(n) && n >= 0 && n < allLinks.length).map(i => allLinks[i]);
+        // Restored original parsing logic for perfect compatibility
+        if (/^none$/i.test(answer) || answer === '') return [];
+        const indices = answer.split(/[\s,،]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0 && n < allLinks.length);
+        
+        return indices.map(i => allLinks[i]);
       } catch (e) {
         console.error("AI link search failed:", e);
       }
@@ -575,20 +567,20 @@
       matches = searchByBothStrict(allLinks, item.title, imdbID);
       if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 یافت‌شده با تطابق ترکیبی (کد + نام)`);
 
-      stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با موتور هوشمند جمنای...');
+      stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با موتور هوشمند ابری...');
       await tick();
 
       const aiResult = await searchWithAI(item, allLinks);
 
       if (aiResult === null) {
-        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ ارتباط با هوش مصنوعی جمنای مقدور نبود. کلید API را چک کنید.</div>`;
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ ارتباط با هوش مصنوعی مقدور نبود (احتمال شلوغی شبکه عمومی).</div>`;
         return;
       }
       if (aiResult.length === 0) {
         resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ هیچ لینکی برای <b>${item.title}</b> در آرشیو یافت نشد. (تمام ۴ مرحله جستجو انجام شد)</div>`;
         return;
       }
-      renderExtractedLinks(aiResult, item, resultsDiv, `🤖 یافت‌شده توسط هوش مصنوعی جمنای`);
+      renderExtractedLinks(aiResult, item, resultsDiv, `🤖 یافت‌شده توسط هوش مصنوعی`);
     }
 
     function tick() { return new Promise(r => setTimeout(r, 0)); }
@@ -709,13 +701,12 @@
       localStorage.setItem("cinetrack_audio_reviews", JSON.stringify(state.audioReviews));
     }
 
-    // --- GEMINI PLOT TRANSLATOR ---
     async function translatePlotInline(id) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
 
       const plotEl = document.getElementById(`plot_wrapper_${id}`);
-      if (plotEl) plotEl.innerHTML = `<span style="color:var(--cyan); font-weight:600;">⏳ در حال ترجمه داستان به فارسی (جمنای)...</span>`;
+      if (plotEl) plotEl.innerHTML = `<span style="color:var(--cyan); font-weight:600;">⏳ در حال ترجمه داستان به فارسی...</span>`;
       
       const sysPrompt = "You are an expert movie translator. Translate the following English movie plot into natural, fluent Persian (Farsi). Output ONLY the translation. Do not use Markdown blocks.";
       
@@ -726,7 +717,7 @@
           saveStateToStorage(); renderHero();
         }
       } catch (err) {
-        if (plotEl) plotEl.innerHTML = `<span style="color:red;">خطای شبکه یا کلید نامعتبر: ${err.message}</span>`;
+        if (plotEl) plotEl.innerHTML = `<span style="color:red;">خطا: ${err.message}</span>`;
       }
     }
 
@@ -858,6 +849,7 @@
       container.innerHTML = `<div class="stat-card"><h3>${total}</h3><p>کل عناوین</p></div><div class="stat-card"><h3>${watching}</h3><p>⏳ در حال تماشا</p></div><div class="stat-card"><h3>${completed}</h3><p>✅ تمام شده</p></div><div class="stat-card"><h3>⭐ ${imdbAvg}</h3><p>میانگین کل IMDb</p></div><div class="stat-card"><h3>★ ${userAvg}</h3><p>میانگین امتیازهای من</p></div><div class="stat-card"><h3 style="font-size:15px;font-weight:800;padding-top:6px;color:var(--cyan);">${favoriteGenre}</h3><p>🎭 ژانر محبوب</p></div>`;
     }
 
+    // --- RESTORED EXACT ORIGINAL OMDB FETCH LOGIC ---
     function handleSearch(query) {
       clearTimeout(searchDebounceTimer);
       const dropdown = document.getElementById("searchDropdown");
@@ -892,6 +884,7 @@
       if (state.omdbCache[imdbID]) { movieData = state.omdbCache[imdbID]; } 
       else {
         try {
+          // Exact logic from the original version ensuring clean full plots
           let res = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&i=${imdbID}&plot=full`);
           movieData = await res.json();
           if (movieData.Response === "True") { state.omdbCache[imdbID] = movieData; localStorage.setItem("cinetrack_omdb_cache", JSON.stringify(state.omdbCache)); }
@@ -1041,41 +1034,43 @@
       container.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;cursor:pointer;" onclick="selectGridItem('${top.id}')"><div style="display:flex;align-items:center;gap:15px;"><img src="${top.poster !== 'N/A' ? top.poster : 'https://via.placeholder.com/50x70?text=No'}" style="width:36px;height:50px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"><div><h4 style="font-weight:700;font-size:14.5px;">${top.title}</h4><p style="font-size:12px;color:var(--text-muted);margin-top:2px;">وضعیت: ${translateStatus(top.status)} | ⭐ IMDb: ${top.imdbRating}</p></div></div><button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">🎯 تمرکز روی این عنوان</button></div>`;
     }
 
-    // --- GEMINI SIMILAR RECOMMENDATIONS ---
+    // --- RESTORED PERSONALIZED AI FEATURES ---
     async function generateSimilarRecommendations(id) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
 
       const responseBox = document.getElementById("aiSimilarRecommendations"); if (!responseBox) return;
       responseBox.style.display = "block";
-      responseBox.innerHTML = `<span style="color:var(--cyan);font-weight:600;">⏳ در حال تحلیل هوشمند عناوین مشابه (جمنای)...</span>`;
+      responseBox.innerHTML = `<span style="color:var(--cyan);font-weight:600;">⏳ در حال تحلیل هوشمند عناوین مشابه...</span>`;
       
-      const sysPrompt = `You are CineTrack AI Assistant. Recommend 5 movies or TV shows closely similar to the user's selected title. SPEAK STRICTLY IN PERSIAN (FARSI). Do not use English text. Output natural paragraphs without markdown blocks.`;
+      // Restored original persona, explicitly requested rich formatting
+      const sysPrompt = `You are CineTrack AI Assistant. Recommend 5 movies or TV shows closely similar to the user's selected title. SPEAK STRICTLY IN PERSIAN (FARSI). Do not use English text. Feel free to format your response beautifully with emojis and short bullet points to make it readable.`;
       const userText = `Title: "${item.title}". Type: ${item.type}. Genre: ${item.genre}. Plot: ${item.plot}. Give 5 recommendations.`;
       
       try {
-        const translatedText = await callGeminiAPI(sysPrompt, userText);
+        const analysis = await callGeminiAPI(sysPrompt, userText);
         responseBox.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:6px;">
-            <h4 style="font-size:13.5px;font-weight:800;color:var(--text-main);">🤖 عناوین مشابه (تحلیل جمنای)</h4>
+            <h4 style="font-size:13.5px;font-weight:800;color:var(--text-main);">🤖 عناوین مشابه (تحلیل AI)</h4>
             <button class="btn btn-secondary" style="padding:2px 6px;font-size:10px;" onclick="document.getElementById('aiSimilarRecommendations').style.display='none'">✖</button>
           </div>
-          <div style="font-size:13px;line-height:1.75;white-space:pre-wrap;">${translatedText}</div>`;
+          <div style="font-size:13px;line-height:1.75;white-space:pre-wrap;">${analysis}</div>`;
       } catch (err) {
-        responseBox.innerHTML = `<span style="color:red;">خطای شبکه یا کلید نامعتبر: ${err.message}</span>`;
+        responseBox.innerHTML = `<span style="color:red;">خطا: ${err.message}</span>`;
       }
     }
 
-    // --- GEMINI GLOBAL ARCHIVE ANALYSIS ---
     async function generateGlobalAIAnalysis(forceRegen = false) {
       if (!forceRegen && state.globalAiCache) return;
       const btn         = document.querySelector(".ai-global-panel .btn");
       const responseBox = document.getElementById("globalAiResponse");
       btn.disabled = true;
-      responseBox.innerText = "⏳ در حال آنالیز آماری آرشیو توسط جمنای. لطفاً صبور باشید...";
+      responseBox.innerText = "⏳ در حال آنالیز آماری آرشیو. لطفاً صبور باشید...";
       
       const safeData = state.items.map(i => ({ title: i.title, type: i.type, genre: i.genre, rating: i.imdbRating }));
-      const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection JSON. Give structural feedback STRICTLY IN PERSIAN (FARSI). NEVER write in English. Highlight their favorite genres, analyze their viewing habits, and suggest 3 masterpiece titles they are missing. Use clear structure without markdown symbols.`;
+      
+      // Restored original exact persona "CineTrack AI Brain" to get the personalized insight feeling
+      const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. Give highly personalized structural feedback STRICTLY IN PERSIAN (FARSI). NEVER write in English. Highlight patterns in their taste, note their favorite genres based on the data, and kindly suggest a few masterpiece titles they are missing. Use beautiful formatting with emojis so it looks great on a webpage.`;
       
       try {
         const analysis = await callGeminiAPI(sysPrompt, JSON.stringify(safeData));
@@ -1084,7 +1079,7 @@
         responseBox.innerHTML = analysis;
         document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
       } catch (err) {
-        responseBox.innerText = `خطا در برقراری ارتباط با سرور یا کلید نامعتبر: ${err.message}`;
+        responseBox.innerText = `خطا: ${err.message}`;
       } finally {
         btn.disabled = false;
       }
