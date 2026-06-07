@@ -807,52 +807,60 @@
     }
 
     async function matchAndExtractLinks(imdbID) {
-      const item = state.items.find(i => i.id === imdbID);
-      const resultsDiv = document.getElementById("archiveMatchResults");
-      if (!resultsDiv) return;
+  const item = state.items.find(i => i.id === imdbID);
+  const resultsDiv = document.getElementById("archiveMatchResults");
+  if (!resultsDiv) return;
 
-      if (!state.archiveHtmlSource) {
-        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ فایل آرشیو بارگذاری نشده است. در تنظیمات فایل HTML آرشیو را آپلود کنید.</div>`;
-        return;
-      }
+  if (!state.archiveHtmlSource) {
+    resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ فایل آرشیو بارگذاری نشده است. در تنظیمات فایل HTML آرشیو را آپلود کنید.</div>`;
+    return;
+  }
 
-      function stageMsg(n, msg) {
-        resultsDiv.innerHTML = `<div class="stage-indicator"><div class="stage-spinner"></div><span>مرحله ${n} از ۴ — ${msg}</span></div>`;
-      }
+  function stageMsg(n, msg) {
+    resultsDiv.innerHTML = `<div class="stage-indicator"><div class="stage-spinner"></div><span>مرحله ${n} از ۴ — ${msg}</span></div>`;
+  }
 
-      const allLinks = getAllArchiveLinks();
-      let matches = [];
+  const allLinks = getAllArchiveLinks();
+  let matches = [];
 
-      stageMsg('۱', `جستجو با کد IMDb: ${imdbID}`);
-      await tick();
-      matches = searchByImdbId(allLinks, imdbID);
-      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🆔 یافت‌شده با کد IMDb: <b>${imdbID}</b>`);
+  // --- Stage 1: IMDb ID only (fastest, most accurate) ---
+  stageMsg('۱', `جستجو با کد IMDb: ${imdbID}`);
+  await tick();
+  matches = searchByImdbId(allLinks, imdbID);
+  if (matches.length > 0) {
+    return renderExtractedLinks(matches, item, resultsDiv, `🆔 یافت‌شده با کد IMDb: <b>${imdbID}</b>`);
+  }
 
-      stageMsg('۲', `جستجو با نام دقیق: ${item.title}`);
-      await tick();
-      matches = searchByTitleOnly(allLinks, item.title);
-      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤 یافت‌شده با نام: <b>${item.title}</b>`);
+  // --- Stage 2: IMDb ID + Title (strict combined) – prevents false positives ---
+  stageMsg('۲', 'جستجوی ترکیبی — تطابق هم‌زمان کد و نام');
+  await tick();
+  matches = searchByBothStrict(allLinks, item.title, imdbID);
+  if (matches.length > 0) {
+    return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 یافت‌شده با تطابق ترکیبی (کد + نام)`);
+  }
 
-      stageMsg('۳', 'جستجوی ترکیبی — تطابق هم‌زمان کد و نام');
-      await tick();
-      matches = searchByBothStrict(allLinks, item.title, imdbID);
-      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 یافت‌شده با تطابق ترکیبی (کد + نام)`);
+  // --- Stage 3: Title only (wide search, but now only if the two above failed) ---
+  stageMsg('۳', `جستجو با نام دقیق: ${item.title}`);
+  await tick();
+  matches = searchByTitleOnly(allLinks, item.title);
+  if (matches.length > 0) {
+    return renderExtractedLinks(matches, item, resultsDiv, `🔤 یافت‌شده با نام: <b>${item.title}</b>`);
+  }
 
-      stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با موتور هوشمند ابری...');
-      await tick();
-
-      const aiResult = await searchWithAI(item, allLinks);
-
-      if (aiResult === null) {
-        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ ارتباط با هوش مصنوعی ممکن نیست. مطمئن شوید کلید API معتبر است.</div>`;
-        return;
-      }
-      if (aiResult.length === 0) {
-        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ هیچ لینکی برای <b>${item.title}</b> در آرشیو یافت نشد. (تمام ۴ مرحله جستجو انجام شد)</div>`;
-        return;
-      }
-      renderExtractedLinks(aiResult, item, resultsDiv, `🤖 یافت‌شده توسط هوش مصنوعی`);
-    }
+  // --- Stage 4: AI search (last resort) ---
+  stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با موتور هوشمند ابری...');
+  await tick();
+  const aiResult = await searchWithAI(item, allLinks);
+  if (aiResult === null) {
+    resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ ارتباط با هوش مصنوعی ممکن نیست. مطمئن شوید کلید API معتبر است.</div>`;
+    return;
+  }
+  if (aiResult.length === 0) {
+    resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ هیچ لینکی برای <b>${item.title}</b> در آرشیو یافت نشد. (تمام ۴ مرحله جستجو انجام شد)</div>`;
+    return;
+  }
+  renderExtractedLinks(aiResult, item, resultsDiv, `🤖 یافت‌شده توسط هوش مصنوعی`);
+}
 
     function tick() { return new Promise(r => setTimeout(r, 0)); }
 
