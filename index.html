@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CineTrack AI — Ultimate Edition</title>
+  <title>CineTrack AI — Ultimate Edition (Fixed)</title>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -27,19 +27,18 @@
       --radius-sm: 12px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; transition: all 0.2s ease; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; }
     body { background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; padding-bottom: 60px; }
 
     .glass {
       background: var(--glass);
       backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--glass-border);
       border-radius: var(--radius);
     }
 
     header {
-      background: rgba(13,15,26,0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      background: rgba(13,15,26,0.8); backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; justify-content: space-between;
       align-items: center; position: sticky; top: 0; z-index: 100; gap: 20px; flex-wrap: wrap;
     }
@@ -69,7 +68,7 @@
       position: absolute; top: 110%; left: 0; right: 0; background: var(--bg-secondary);
       border: 1px solid var(--glass-border); border-radius: var(--radius-sm); max-height: 400px; overflow-y: auto;
       z-index: 200; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none;
-      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
     }
 
     .search-item {
@@ -308,11 +307,114 @@
     }
     .load-more-btn:hover { background: rgba(255,255,255,0.08); }
 
+    /* Floating AI Assistant */
+    .ai-assistant-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      z-index: 400;
+      transition: transform 0.2s;
+      border: none;
+    }
+    .ai-assistant-btn:hover { transform: scale(1.05); }
+    .ai-assistant-panel {
+      position: fixed;
+      bottom: 100px;
+      right: 24px;
+      width: 380px;
+      max-width: calc(100vw - 48px);
+      height: 500px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px);
+      z-index: 401;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+      transition: all 0.2s;
+      font-family: 'Vazirmatn', sans-serif;
+    }
+    .ai-assistant-panel.hidden { display: none; }
+    .ai-chat-header {
+      padding: 16px;
+      background: rgba(34,211,238,0.1);
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+    }
+    .ai-chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .chat-message {
+      padding: 10px 14px;
+      border-radius: 18px;
+      max-width: 85%;
+      word-wrap: break-word;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .chat-message.user {
+      background: var(--accent);
+      align-self: flex-end;
+      color: white;
+    }
+    .chat-message.assistant {
+      background: rgba(255,255,255,0.08);
+      align-self: flex-start;
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+    }
+    .ai-chat-input-area {
+      display: flex;
+      padding: 12px;
+      gap: 8px;
+      border-top: 1px solid var(--glass-border);
+      background: rgba(0,0,0,0.2);
+    }
+    .ai-chat-input {
+      flex: 1;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 8px 16px;
+      color: white;
+      outline: none;
+      font-size: 13px;
+    }
+    .ai-chat-send {
+      background: var(--cyan);
+      border: none;
+      border-radius: 20px;
+      padding: 0 16px;
+      color: #0d0f1a;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
     @media (max-width: 768px) {
       .hero-content { flex-direction: column; align-items: center; }
       .controls-bar { flex-direction: column; align-items: stretch; }
       header { justify-content: center; }
       .search-container { width: 100%; }
+      .ai-assistant-panel { width: 320px; right: 10px; bottom: 90px; }
     }
   </style>
 </head>
@@ -395,6 +497,22 @@
     <div class="ai-response" id="globalAiResponse">درخواست آنالیز کل آرشیو را صادر کنید...</div>
   </section>
 
+  <!-- Floating AI Assistant -->
+  <div class="ai-assistant-btn" id="aiAssistantBtn">🤖</div>
+  <div id="aiAssistantPanel" class="ai-assistant-panel hidden">
+    <div class="ai-chat-header">
+      <span>🤖 دستیار هوشمند CineTrack</span>
+      <button class="btn btn-secondary" style="padding:4px 8px;" onclick="toggleAIAssistant()">✖</button>
+    </div>
+    <div class="ai-chat-messages" id="aiChatMessages">
+      <div class="chat-message assistant">سلام! من دستیار هوشمند شما هستم. می‌توانم فیلم/سریال اضافه کنم، امتیاز بدهم، پیشرفت را بروزرسانی کنم، جستجو کنم و کتابخانه را مدیریت کنم. چه کمکی می‌توانم بکنم؟</div>
+    </div>
+    <div class="ai-chat-input-area">
+      <input type="text" id="aiChatInput" class="ai-chat-input" placeholder="یک دستور بنویسید... (مثلاً: فیلم Inception را اضافه کن)" onkeypress="if(event.key==='Enter') sendAIMessage()">
+      <button class="ai-chat-send" onclick="sendAIMessage()">ارسال</button>
+    </div>
+  </div>
+
   <!-- Modals -->
   <div class="modal-backdrop" id="addModal">
     <div class="modal-box">
@@ -456,15 +574,10 @@
 
   <script>
     // ==================== API CONFIGURATION ====================
-    const OMDB_KEY = "4b0254f3";  // OMDb API key
-
-    // 🧠 AI Configuration – Use AvalAI (or any OpenAI-compatible API)
-    // 1. Get your API key from avalai.ir (or your provider)
-    // 2. Set the base URL (usually https://api.avalai.ir/v1)
-    // 3. Choose a model (e.g., gpt-3.5-turbo, gpt-4, or a Persian model)
-    const AI_API_BASE = "https://api.avalai.ir/v1";   // <-- CHANGE TO YOUR AVALAI ENDPOINT
-    const AI_API_KEY  = "aa-Guxnyo16ZkqRGPoFYUC5gD4JCs1BKPXyiL1BFEeAluA2guzl";   // <-- REPLACE WITH YOUR KEY
-    const AI_MODEL    = "gpt-5.4-mini";              // <-- MODEL NAME FROM AVALAI
+    const OMDB_KEY = "4b0254f3";
+    const AI_API_BASE = "https://api.avalai.ir/v1";
+    const AI_API_KEY  = "aa-Guxnyo16ZkqRGPoFYUC5gD4JCs1BKPXyiL1BFEeAluA2guzl";
+    const AI_MODEL    = "gpt-5.4-mini";
 
     // ==================== IndexedDB ====================
     const DB_NAME = 'CineTrackDB';
@@ -511,17 +624,19 @@
 
     // ==================== GLOBAL STATE ====================
     let state = {
-      items: JSON.parse(localStorage.getItem("cinetrack_ultimate_db") || "[]"),
+      items: [],
       selectedId: null,
       filters: { status: 'all', type: 'all', special: 'all', genre: 'all' },
       sortBy: 'dateAdded',
-      omdbCache: JSON.parse(localStorage.getItem("cinetrack_omdb_cache") || "{}"),
-      globalAiCache: localStorage.getItem("cinetrack_global_ai_cache") || "",
+      omdbCache: {},
+      globalAiCache: "",
       archiveHtmlSource: "",
-      audioReviews: JSON.parse(localStorage.getItem("cinetrack_audio_reviews") || "{}"),
-      uiLanguage: localStorage.getItem("cinetrack_ui_lang") || "en"
+      audioReviews: {},
+      uiLanguage: "en"
     };
 
+    // Search cache for performance
+    let searchCache = new Map(); // key "query_page"
     let searchDebounceTimer;
     let isSavingItem = false;
     let recognition = null;
@@ -531,22 +646,32 @@
     let isLoadingMore = false;
     let searchAbortController = null;
 
+    // ==================== PERSISTENCE ====================
+    function saveStateToStorage() {
+      localStorage.setItem("cinetrack_ultimate_db", JSON.stringify(state.items));
+      localStorage.setItem("cinetrack_omdb_cache", JSON.stringify(state.omdbCache));
+      localStorage.setItem("cinetrack_global_ai_cache", state.globalAiCache);
+      localStorage.setItem("cinetrack_audio_reviews", JSON.stringify(state.audioReviews));
+      localStorage.setItem("cinetrack_ui_lang", state.uiLanguage);
+    }
+
+    function loadStateFromStorage() {
+      state.items = JSON.parse(localStorage.getItem("cinetrack_ultimate_db") || "[]");
+      state.omdbCache = JSON.parse(localStorage.getItem("cinetrack_omdb_cache") || "{}");
+      state.globalAiCache = localStorage.getItem("cinetrack_global_ai_cache") || "";
+      state.audioReviews = JSON.parse(localStorage.getItem("cinetrack_audio_reviews") || "{}");
+      state.uiLanguage = localStorage.getItem("cinetrack_ui_lang") || "en";
+    }
+
     // ==================== UTILS ====================
     function sanitizeAIResponse(text) {
       if (!text) return "";
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;")
-        .replace(/\n/g, "<br>");
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;").replace(/\n/g, "<br>");
     }
 
-    // ==================== AVALAI (OPENAI-COMPATIBLE) API CALL ====================
     async function callAIAPI(systemPrompt, userText) {
       const key = AI_API_KEY.trim();
-      const baseUrl = AI_API_BASE.replace(/\/+$/, ""); // remove trailing slashes
+      const baseUrl = AI_API_BASE.replace(/\/+$/, "");
       if (!key || key === "your-avalai-api-key-here") {
         throw new Error("⚠️ لطفاً کلید API آوالای (AvalAI) را در متغیر AI_API_KEY تنظیم کنید.");
       }
@@ -577,16 +702,22 @@
       return data.choices[0].message.content;
     }
 
-    // ==================== OMDB SEARCH (with abort) ====================
+    // ==================== OMDB SEARCH (optimized with cache) ====================
     async function performSearch(query, page = 1, signal) {
+      const cacheKey = `${query.toLowerCase()}_${page}`;
+      if (searchCache.has(cacheKey)) {
+        return searchCache.get(cacheKey);
+      }
       try {
         const res = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&s=${encodeURIComponent(query)}&page=${page}`, { signal });
         if (!res.ok) throw new Error("Network error");
         const data = await res.json();
+        let results = { results: [], totalResults: 0 };
         if (data.Response === "True" && data.Search) {
-          return { results: data.Search, totalResults: parseInt(data.totalResults) || 0 };
+          results = { results: data.Search, totalResults: parseInt(data.totalResults) || 0 };
+          searchCache.set(cacheKey, results);
         }
-        return { results: [], totalResults: 0 };
+        return results;
       } catch (e) {
         if (e.name !== 'AbortError') console.error(e);
         return { results: [], totalResults: 0 };
@@ -597,12 +728,12 @@
       clearTimeout(searchDebounceTimer);
       if (searchAbortController) searchAbortController.abort();
       const dropdown = document.getElementById("searchDropdown");
-      if (!query || query.trim().length < 2) { 
-        dropdown.style.display = "none"; 
+      if (!query || query.trim().length < 2) {
+        dropdown.style.display = "none";
         currentSearchQuery = "";
         currentSearchResults = [];
         currentSearchPage = 1;
-        return; 
+        return;
       }
       currentSearchQuery = query.trim();
       currentSearchPage = 1;
@@ -618,21 +749,18 @@
         currentSearchResults = firstPage.results;
         const hasMore = firstPage.totalResults > 10;
         renderSearchDropdown(currentSearchResults, hasMore, 1, firstPage.totalResults);
-        if (hasMore && currentSearchResults.length < 30) {
-          for (let p = 2; p <= 3; p++) {
-            if (signal.aborted) break;
-            const nextPage = await performSearch(currentSearchQuery, p, signal);
-            if (signal.aborted) break;
-            if (nextPage.results.length) {
-              const existingIds = new Set(currentSearchResults.map(r => r.imdbID));
-              const newResults = nextPage.results.filter(r => !existingIds.has(r.imdbID));
-              currentSearchResults.push(...newResults);
-              currentSearchPage = p;
-              renderSearchDropdown(currentSearchResults, true, p, firstPage.totalResults);
-            } else break;
+        // Only fetch second page if needed (optimized: only one extra page)
+        if (hasMore && currentSearchResults.length < 20) {
+          const secondPage = await performSearch(currentSearchQuery, 2, signal);
+          if (!signal.aborted && secondPage.results.length) {
+            const existingIds = new Set(currentSearchResults.map(r => r.imdbID));
+            const newResults = secondPage.results.filter(r => !existingIds.has(r.imdbID));
+            currentSearchResults.push(...newResults);
+            currentSearchPage = 2;
+            renderSearchDropdown(currentSearchResults, secondPage.totalResults > 20, 2, secondPage.totalResults);
           }
         }
-      }, 400);
+      }, 500);
     }
 
     function renderSearchDropdown(results, hasMore, currentPage, totalResults) {
@@ -664,47 +792,49 @@
         const newResults = more.results.filter(r => !existingIds.has(r.imdbID));
         currentSearchResults.push(...newResults);
         currentSearchPage = nextPage;
-        renderSearchDropdown(currentSearchResults, more.results.length === 10, currentSearchPage, more.totalResults);
+        renderSearchDropdown(currentSearchResults, more.totalResults > (currentSearchPage * 10), currentSearchPage, more.totalResults);
       }
       isLoadingMore = false;
     }
 
-    function clearSearchInput() { 
-      document.getElementById("searchInput").value = ""; 
+    function clearSearchInput() {
+      document.getElementById("searchInput").value = "";
       document.getElementById("searchDropdown").style.display = "none";
       currentSearchQuery = "";
       currentSearchResults = [];
       if (searchAbortController) searchAbortController.abort();
     }
-    
-    function translateType(type) { 
-      if (type === "movie") return "فیلم سینمایی"; 
-      if (type === "series") return "سریال تلویزیونی"; 
-      return type; 
+
+    function translateType(type) {
+      if (type === "movie") return "فیلم سینمایی";
+      if (type === "series") return "سریال تلویزیونی";
+      return type;
     }
 
     async function fetchItemFullDetails(imdbID) {
       document.getElementById("searchDropdown").style.display = "none";
       let movieData;
-      if (state.omdbCache[imdbID]) { movieData = state.omdbCache[imdbID]; } 
-      else {
+      if (state.omdbCache[imdbID]) {
+        movieData = state.omdbCache[imdbID];
+      } else {
         try {
           let res = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&i=${imdbID}&plot=full`);
           if (!res.ok) throw new Error("Network error");
           movieData = await res.json();
-          if (movieData.Response === "True") { 
-            state.omdbCache[imdbID] = movieData; 
-            localStorage.setItem("cinetrack_omdb_cache", JSON.stringify(state.omdbCache)); 
+          if (movieData.Response === "True") {
+            state.omdbCache[imdbID] = movieData;
+            saveStateToStorage();
           } else { alert("اطلاعات این عنوان یافت نشد."); return; }
         } catch (e) { alert("خطا در ارتباط با OMDb"); return; }
       }
       openAddModal(movieData);
     }
 
+    // ==================== ADD/EDIT MODAL ====================
     function openAddModal(data) {
-      const backdrop  = document.getElementById("addModal");
+      const backdrop = document.getElementById("addModal");
       const container = document.getElementById("addModalContent");
-      const isSeries  = data.Type === "series";
+      const isSeries = data.Type === "series";
       container.innerHTML = `
         <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
           <img src="${data.Poster !== 'N/A' ? data.Poster : 'https://via.placeholder.com/150x220?text=No+Cover'}" style="width:120px;height:170px;object-fit:cover;border-radius:10px;border:1px solid var(--glass-border);">
@@ -737,17 +867,19 @@
     }
 
     async function saveItemFromModal() {
-      if (isSavingItem) return; isSavingItem = true;
-      const imdbID     = document.getElementById("formImdbID").value;
-      const status     = document.getElementById("formStatus").value;
+      if (isSavingItem) return;
+      isSavingItem = true;
+      const imdbID = document.getElementById("formImdbID").value;
+      const status = document.getElementById("formStatus").value;
       const userRating = parseInt(document.getElementById("formUserRating").value) || 0;
-      const rawCached  = state.omdbCache[imdbID];
+      const rawCached = state.omdbCache[imdbID];
       if (!rawCached) { isSavingItem = false; return; }
 
-      let season = 1, episode = 1; const isSeries = rawCached.Type === "series";
-      if (isSeries && status !== "Completed") { 
-        season = parseInt(document.getElementById("formSeason").value) || 1; 
-        episode = parseInt(document.getElementById("formEpisode").value) || 1; 
+      let season = 1, episode = 1;
+      const isSeries = rawCached.Type === "series";
+      if (isSeries && status !== "Completed") {
+        season = parseInt(document.getElementById("formSeason").value) || 1;
+        episode = parseInt(document.getElementById("formEpisode").value) || 1;
         const totalSeasons = parseInt(rawCached.totalSeasons) || 1;
         if (season < 1) season = 1;
         if (season > totalSeasons) season = totalSeasons;
@@ -765,15 +897,32 @@
         dateAdded: existingIdx > -1 ? state.items[existingIdx].dateAdded : new Date().toISOString(),
         lastUpdated: new Date().toISOString()
       };
-      if (existingIdx > -1) state.items[existingIdx] = newItem; else state.items.push(newItem);
-      saveStateToStorage(); state.selectedId = imdbID; closeModal('addModal'); renderDashboard(); renderGrid(); renderHero(); isSavingItem = false;
+      if (existingIdx > -1) state.items[existingIdx] = newItem;
+      else state.items.push(newItem);
+
+      saveStateToStorage();
+      state.selectedId = imdbID;
+      closeModal('addModal');
+      // Refresh all UI
+      renderDashboard();
+      renderGrid();
+      renderHero();
+      renderWatchNext();
+      extractAndRenderGenres();
+      isSavingItem = false;
     }
 
+    // ==================== OTHER FUNCTIONS (delete, filters, etc.) ====================
     function deleteItem(id) {
       if (!confirm("آیا مطمئن هستید که می‌خواهید این عنوان را حذف کنید؟")) return;
       state.items = state.items.filter(i => i.id !== id);
       if (state.selectedId === id) state.selectedId = null;
-      saveStateToStorage(); renderDashboard(); renderGrid(); renderHero();
+      saveStateToStorage();
+      renderDashboard();
+      renderGrid();
+      renderHero();
+      renderWatchNext();
+      extractAndRenderGenres();
     }
 
     function renderStarsStatic(rating) { let h = ""; for (let i = 1; i <= 5; i++) h += `<span style="color:${i <= rating ? '#fbbf24' : '#4b5563'};margin-left:2px;">★</span>`; return h; }
@@ -781,7 +930,8 @@
 
     function extractAndRenderGenres() {
       const select = document.getElementById("genreFilterSelect"); if (!select) return;
-      const currentVal = state.filters.genre; let genresSet = new Set();
+      const currentVal = state.filters.genre;
+      let genresSet = new Set();
       state.items.forEach(item => { if (item.genre && item.genre !== "N/A") item.genre.split(",").forEach(g => genresSet.add(g.trim())); });
       let h = `<option value="all">فیلتر ژانر (همه)</option>`;
       Array.from(genresSet).sort().forEach(g => { h += `<option value="${g}" ${g === currentVal ? 'selected' : ''}>${g}</option>`; });
@@ -789,35 +939,32 @@
     }
 
     function setFilter(key, value) {
-      if (key === 'status' || key === 'type' || key === 'special') { state.filters.status = 'all'; state.filters.type = 'all'; state.filters.special = 'all'; }
-      state.filters[key] = value; setupFilterButtonsUI(); renderGrid();
+      if (key === 'status' || key === 'type' || key === 'special') {
+        state.filters.status = 'all'; state.filters.type = 'all'; state.filters.special = 'all';
+      }
+      state.filters[key] = value;
+      document.querySelectorAll("#filterContainer .filter-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll("#filterContainer .filter-btn").forEach(btn => {
+        const str = btn.getAttribute("onclick");
+        if (str && str.includes(`'${key}'`) && str.includes(`'${value}'`)) btn.classList.add("active");
+      });
+      renderGrid();
     }
 
     function handleGenreChange(val) { state.filters.genre = val; renderGrid(); }
-    function handleSortChange(val)  { state.sortBy = val; renderGrid(); }
-
-    function setupFilterButtonsUI() {
-      const btns = document.querySelectorAll("#filterContainer .filter-btn");
-      btns.forEach(b => b.classList.remove("active"));
-      btns.forEach(b => {
-        const str = b.getAttribute("onclick");
-        if (str.includes("'status'") && str.includes(`'${state.filters.status}'`)) b.classList.add("active");
-        if (str.includes("'type'")   && str.includes(`'${state.filters.type}'`))   b.classList.add("active");
-        if (str.includes("'special'")&& str.includes(`'${state.filters.special}'`))b.classList.add("active");
-      });
-    }
+    function handleSortChange(val) { state.sortBy = val; renderGrid(); }
 
     function getFilteredAndSortedItems() {
       let arr = [...state.items];
-      if (state.filters.status  !== 'all') arr = arr.filter(i => i.status === state.filters.status);
-      if (state.filters.type    !== 'all') arr = arr.filter(i => i.type === state.filters.type);
-      if (state.filters.genre   !== 'all') arr = arr.filter(i => i.genre && i.genre.includes(state.filters.genre));
-      if (state.filters.special === 'highRated')   arr = arr.filter(i => parseFloat(i.imdbRating) >= 8.0);
+      if (state.filters.status !== 'all') arr = arr.filter(i => i.status === state.filters.status);
+      if (state.filters.type !== 'all') arr = arr.filter(i => i.type === state.filters.type);
+      if (state.filters.genre !== 'all') arr = arr.filter(i => i.genre && i.genre.includes(state.filters.genre));
+      if (state.filters.special === 'highRated') arr = arr.filter(i => parseFloat(i.imdbRating) >= 8.0);
       if (state.filters.special === 'personalTop') arr = arr.filter(i => i.userRating === 5);
       arr.sort((a, b) => {
-        if (state.sortBy === 'title')      return a.title.localeCompare(b.title);
-        if (state.sortBy === 'imdb')       return (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0);
-        if (state.sortBy === 'year')       return parseInt(b.year) - parseInt(a.year);
+        if (state.sortBy === 'title') return a.title.localeCompare(b.title);
+        if (state.sortBy === 'imdb') return (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0);
+        if (state.sortBy === 'year') return parseInt(b.year) - parseInt(a.year);
         if (state.sortBy === 'userRating') return b.userRating - a.userRating;
         return new Date(b.dateAdded) - new Date(a.dateAdded);
       });
@@ -830,7 +977,8 @@
       const items = getFilteredAndSortedItems();
       if (items.length === 0) { container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-secondary);font-size:14px;">هیچ عنوانی یافت نشد.</div>`; return; }
       container.innerHTML = items.map(item => {
-        const isSelected = item.id === state.selectedId; const progress = item.type === 'series' ? getProgressPercent(item) : 0;
+        const isSelected = item.id === state.selectedId;
+        const progress = item.type === 'series' ? getProgressPercent(item) : 0;
         return `<div class="movie-card ${isSelected ? 'selected' : ''}" onclick="selectGridItem('${item.id}')"><div class="card-poster-wrapper"><img src="${item.poster !== 'N/A' ? item.poster : 'https://via.placeholder.com/200x280?text=No+Cover'}" alt=""><div class="card-overlay"><p style="font-size:13px;font-weight:700;">⭐ IMDb: ${item.imdbRating}</p><button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="event.stopPropagation();deleteItem('${item.id}')">🗑️ حذف</button></div></div><div class="card-info"><h4 class="card-title" title="${item.title}">${item.title}</h4><div class="card-meta-line"><span>${item.year}</span><span>${translateType(item.type)}</span></div><div style="font-size:12px;margin-top:4px;">امتیاز من: ${renderStarsStatic(item.userRating)}</div>${item.type === 'series' ? `<div class="card-progress">پیشرفت: ${progress}%</div>` : ''}</div></div>`;
       }).join('');
     }
@@ -856,7 +1004,7 @@
       container.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;cursor:pointer;" onclick="selectGridItem('${top.id}')"><div style="display:flex;align-items:center;gap:16px;"><img src="${top.poster !== 'N/A' ? top.poster : 'https://via.placeholder.com/50x70?text=No'}" style="width:40px;height:55px;object-fit:cover;border-radius:8px;border:1px solid var(--glass-border);"><div><h4 style="font-weight:700;font-size:15px;">${top.title}</h4><p style="font-size:13px;color:var(--text-secondary);margin-top:4px;">وضعیت: ${translateStatus(top.status)} | ⭐ IMDb: ${top.imdbRating}</p></div></div><button class="btn btn-secondary" style="font-size:13px;padding:8px 16px;">🎯 تمرکز روی این عنوان</button></div>`;
     }
 
-    // ==================== ARCHIVE LINK SEARCH FUNCTIONS ====================
+    // Archive link extraction (same as before but fixed)
     function getAllArchiveLinks() {
       if (!state.archiveHtmlSource) return [];
       const parser = new DOMParser();
@@ -887,10 +1035,10 @@
     }
 
     function searchByBothStrict(allLinks, title, imdbID) {
-      const id  = imdbID.toLowerCase();
-      const rx  = buildTitleRegex(title);
+      const id = imdbID.toLowerCase();
+      const rx = buildTitleRegex(title);
       return allLinks.filter(l => {
-        const urlLow  = l.url.toLowerCase();
+        const urlLow = l.url.toLowerCase();
         const textLow = l.text.toLowerCase();
         const hasId = urlLow.includes(id) || textLow.includes(id);
         const hasTitle = rx.test(l.url) || rx.test(l.text);
@@ -898,7 +1046,6 @@
       });
     }
 
-    // AI‑powered link search (now uses AvalAI via callAIAPI)
     async function searchWithAI(item, allLinks) {
       const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
       const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title — not related titles or spin-offs. For TV series include only season/episode links for THIS show. If nothing matches, output NONE. Output indices or NONE only — no explanation.`;
@@ -913,7 +1060,6 @@
       return null;
     }
 
-    // ==================== FIXED LINK EXTRACTION ORDER ====================
     async function matchAndExtractLinks(imdbID) {
       const item = state.items.find(i => i.id === imdbID);
       const resultsDiv = document.getElementById("archiveMatchResults");
@@ -931,27 +1077,23 @@
       const allLinks = getAllArchiveLinks();
       let matches = [];
 
-      // Stage 1: IMDb ID
       stageMsg('۱', `جستجو با کد IMDb: ${imdbID}`);
-      await tick();
+      await new Promise(r => setTimeout(r, 10));
       matches = searchByImdbId(allLinks, imdbID);
       if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🆔 یافت‌شده با کد IMDb: <b>${imdbID}</b>`);
 
-      // Stage 2: Combined (ID + Title)
       stageMsg('۲', 'جستجوی ترکیبی — تطابق هم‌زمان کد و نام');
-      await tick();
+      await new Promise(r => setTimeout(r, 10));
       matches = searchByBothStrict(allLinks, item.title, imdbID);
       if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 یافت‌شده با تطابق ترکیبی`);
 
-      // Stage 3: Title only
       stageMsg('۳', `جستجو با نام دقیق: ${item.title}`);
-      await tick();
+      await new Promise(r => setTimeout(r, 10));
       matches = searchByTitleOnly(allLinks, item.title);
       if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤 یافت‌شده با نام: <b>${item.title}</b>`);
 
-      // Stage 4: AI (via AvalAI)
       stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با هوش مصنوعی...');
-      await tick();
+      await new Promise(r => setTimeout(r, 10));
       const aiResult = await searchWithAI(item, allLinks);
       if (aiResult === null) {
         resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:14px;color:#ef4444;">⚠️ ارتباط با هوش مصنوعی ممکن نیست.</div>`;
@@ -963,8 +1105,6 @@
       }
       renderExtractedLinks(aiResult, item, resultsDiv, `🤖 یافت‌شده توسط هوش مصنوعی`);
     }
-
-    function tick() { return new Promise(r => setTimeout(r, 0)); }
 
     function renderExtractedLinks(matches, currentItem, resultsDiv, strategyLabel) {
       const isSeries = currentItem ? currentItem.type === 'series' : false;
@@ -1029,76 +1169,19 @@
           return out;
         }
         html += renderSeriesGroup(softSubLinks, "SoftSub", "softsub");
-        html += renderSeriesGroup(dubbedLinks,  "Dubbed",  "dubbed");
+        html += renderSeriesGroup(dubbedLinks, "Dubbed", "dubbed");
       }
       html += `</div>`;
       resultsDiv.innerHTML = html;
     }
 
-    // ==================== SPEECH RECOGNITION ====================
-    function initSpeechRecognition() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.lang = 'fa-IR';
-        recognition.interimResults = false;
-        recognition.onresult = function(event) {
-          const textarea = document.getElementById("audioReviewTextarea");
-          if (textarea) {
-            textarea.value = (textarea.value + " " + event.results[0][0].transcript).trim();
-            saveAudioReview(state.selectedId, textarea.value);
-          }
-          setRecordingState(false);
-        };
-        recognition.onerror = () => setRecordingState(false);
-        recognition.onend = () => setRecordingState(false);
-      }
-    }
-
-    function toggleVoiceInput() {
-      if (!recognition) { alert("سیستم تشخیص صدا پشتیبانی نمی‌شود."); return; }
-      const recBtn = document.getElementById("voiceRecBtn");
-      if (recBtn.classList.contains("recording")) recognition.stop();
-      else { setRecordingState(true); recognition.start(); }
-    }
-
-    function setRecordingState(isRec) {
-      const recBtn = document.getElementById("voiceRecBtn");
-      if (!recBtn) return;
-      if (isRec) { recBtn.classList.add("recording"); recBtn.innerHTML = "🛑 در حال ضبط..."; } 
-      else { recBtn.classList.remove("recording"); recBtn.innerHTML = "🎙️ ضبط صدا"; }
-    }
-
-    function saveAudioReview(id, text) {
-      state.audioReviews[id] = text;
-      localStorage.setItem("cinetrack_audio_reviews", JSON.stringify(state.audioReviews));
-    }
-
-    // ==================== PLOT TRANSLATION (via AvalAI) ====================
-    async function translatePlotInline(id) {
-      const item = state.items.find(i => i.id === id);
-      if (!item) return;
-      const plotEl = document.getElementById(`plot_wrapper_${id}`);
-      if (plotEl) plotEl.innerHTML = `<span style="color:var(--cyan);">⏳ در حال ترجمه...</span>`;
-      const sysPrompt = "You are an expert movie translator. Translate the following English movie plot into natural, fluent Persian (Farsi). Output ONLY the translation.";
-      try {
-        const translatedText = await callAIAPI(sysPrompt, item.plot);
-        if (translatedText) {
-          item.plotFa = translatedText.trim();
-          saveStateToStorage(); renderHero();
-        }
-      } catch (err) {
-        if (plotEl) plotEl.innerHTML = `<span style="color:#ef4444;">خطا: ${err.message}</span>`;
-      }
-    }
-
+    // Progress and other helpers
     function getProgressPercent(item) {
       if (item.type !== 'series') return 0;
-      const totalS   = parseInt(item.totalSeasons) || 1;
-      const currentS = parseInt(item.season)       || 1;
-      const currentE = parseInt(item.episode)       || 1;
-      let basePercent     = ((currentS - 1) / totalS) * 100;
+      const totalS = parseInt(item.totalSeasons) || 1;
+      const currentS = parseInt(item.season) || 1;
+      const currentE = parseInt(item.episode) || 1;
+      let basePercent = ((currentS - 1) / totalS) * 100;
       let episodeFraction = (currentE / 15) * (100 / totalS);
       return Math.min(Math.max(Math.round(basePercent + episodeFraction), 0), 100);
     }
@@ -1106,7 +1189,7 @@
     function openManageProgressModal(id) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
-      const backdrop  = document.getElementById("progressModal");
+      const backdrop = document.getElementById("progressModal");
       const container = document.getElementById("progressModalContent");
       container.innerHTML = `
         <input type="hidden" id="progressManageId" value="${item.id}">
@@ -1123,7 +1206,7 @@
       const id = document.getElementById("progressManageId").value;
       const item = state.items.find(i => i.id === id);
       if (!item) return;
-      let season  = parseInt(document.getElementById("progressManageSeason").value)  || 1;
+      let season = parseInt(document.getElementById("progressManageSeason").value) || 1;
       let episode = parseInt(document.getElementById("progressManageEpisode").value) || 1;
       const totalSeasons = parseInt(item.totalSeasons) || 1;
       if (season < 1) season = 1;
@@ -1132,7 +1215,96 @@
       item.season = season;
       item.episode = episode;
       item.lastUpdated = new Date().toISOString();
-      saveStateToStorage(); closeModal("progressModal"); renderHero(); renderGrid();
+      saveStateToStorage();
+      closeModal("progressModal");
+      renderHero();
+      renderGrid();
+    }
+
+    // Translation and AI recommendations
+    async function translatePlotInline(id) {
+      const item = state.items.find(i => i.id === id);
+      if (!item) return;
+      const plotEl = document.getElementById(`plot_wrapper_${id}`);
+      if (plotEl) plotEl.innerHTML = `<span style="color:var(--cyan);">⏳ در حال ترجمه...</span>`;
+      const sysPrompt = "You are an expert movie translator. Translate the following English movie plot into natural, fluent Persian (Farsi). Output ONLY the translation.";
+      try {
+        const translatedText = await callAIAPI(sysPrompt, item.plot);
+        if (translatedText) {
+          item.plotFa = translatedText.trim();
+          saveStateToStorage();
+          renderHero();
+        }
+      } catch (err) {
+        if (plotEl) plotEl.innerHTML = `<span style="color:#ef4444;">خطا: ${err.message}</span>`;
+      }
+    }
+
+    async function generateSimilarRecommendations(id) {
+      const item = state.items.find(i => i.id === id);
+      if (!item) return;
+      const responseBox = document.getElementById("aiSimilarRecommendations"); if (!responseBox) return;
+      responseBox.style.display = "block";
+      responseBox.innerHTML = `<span style="color:var(--cyan);">⏳ در حال تحلیل...</span>`;
+      const sysPrompt = `You are CineTrack AI. Recommend 5 movies or TV shows similar to the user's title. STRICTLY in Persian (Farsi). Use emojis and bullet points.`;
+      const userText = `Title: "${item.title}". Type: ${item.type}. Genre: ${item.genre}. Plot: ${item.plot}. Give 5 recommendations.`;
+      try {
+        const analysis = await callAIAPI(sysPrompt, userText);
+        responseBox.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:12px;"><h4 style="font-size:15px;font-weight:800;">🤖 عناوین مشابه</h4><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="document.getElementById('aiSimilarRecommendations').style.display='none'">✖</button></div><div style="font-size:14px;line-height:1.9;white-space:pre-wrap;">${sanitizeAIResponse(analysis)}</div>`;
+      } catch (err) {
+        responseBox.innerHTML = `<span style="color:#ef4444;">خطا: ${err.message}</span>`;
+      }
+    }
+
+    async function generateGlobalAIAnalysis(forceRegen = false) {
+      if (!forceRegen && state.globalAiCache) {
+        document.getElementById("globalAiResponse").innerHTML = state.globalAiCache;
+        return;
+      }
+      const btn = document.querySelector(".ai-global-panel .btn");
+      const responseBox = document.getElementById("globalAiResponse");
+      btn.disabled = true;
+      responseBox.innerText = "⏳ در حال آنالیز...";
+      const safeData = state.items.map(i => ({ title: i.title, type: i.type, genre: i.genre, rating: i.imdbRating }));
+      const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. STRICTLY in Persian (Farsi). Highlight patterns, favorite genres, and suggest missing masterpieces. Use beautiful formatting with emojis.`;
+      try {
+        const analysis = await callAIAPI(sysPrompt, JSON.stringify(safeData));
+        const sanitized = sanitizeAIResponse(analysis);
+        state.globalAiCache = sanitized;
+        localStorage.setItem("cinetrack_global_ai_cache", sanitized);
+        responseBox.innerHTML = sanitized;
+        document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
+      } catch (err) {
+        responseBox.innerText = `خطا: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Dashboard
+    function renderDashboard() {
+      const container = document.getElementById("dashboardStats");
+      if (!container) return;
+      const total = state.items.length;
+      const watching = state.items.filter(i => i.status === "Watching").length;
+      const completed = state.items.filter(i => i.status === "Completed").length;
+      let totalImdb = 0, imdbCount = 0;
+      state.items.forEach(i => { let p = parseFloat(i.imdbRating); if (!isNaN(p)) { totalImdb += p; imdbCount++; } });
+      const imdbAvg = imdbCount > 0 ? (totalImdb / imdbCount).toFixed(1) : "0.0";
+      let totalUR = 0, urCount = 0;
+      state.items.forEach(i => { if (i.userRating > 0) { totalUR += i.userRating; urCount++; } });
+      const userAvg = urCount > 0 ? (totalUR / urCount).toFixed(1) : "0.0";
+      let genreFreq = {};
+      state.items.forEach(i => { if (i.genre && i.genre !== "N/A") i.genre.split(",").forEach(g => { let cg = g.trim(); genreFreq[cg] = (genreFreq[cg] || 0) + 1; }); });
+      let favGenre = "نامشخص", max = 0;
+      for (let g in genreFreq) { if (genreFreq[g] > max) { max = genreFreq[g]; favGenre = g; } }
+      container.innerHTML = `
+        <div class="stat-card"><h3>${total}</h3><p>کل عناوین</p></div>
+        <div class="stat-card"><h3>${watching}</h3><p>⏳ در حال تماشا</p></div>
+        <div class="stat-card"><h3>${completed}</h3><p>✅ تمام شده</p></div>
+        <div class="stat-card"><h3>⭐ ${imdbAvg}</h3><p>میانگین IMDb</p></div>
+        <div class="stat-card"><h3>★ ${userAvg}</h3><p>میانگین امتیازهای من</p></div>
+        <div class="stat-card"><h3 style="font-size:16px;color:var(--cyan);">${favGenre}</h3><p>🎭 ژانر محبوب</p></div>`;
     }
 
     function renderHero() {
@@ -1144,7 +1316,7 @@
       }
       const item = state.items.find(i => i.id === state.selectedId);
       if (!item) return;
-      const isSeries    = item.type === 'series';
+      const isSeries = item.type === 'series';
       const progressPct = getProgressPercent(item);
       const savedReview = state.audioReviews[item.id] || "";
       let displayPlot = item.plot;
@@ -1191,74 +1363,21 @@
         </div>`;
     }
 
-    function renderDashboard() {
-      const container = document.getElementById("dashboardStats");
-      if (!container) return;
-      const total = state.items.length;
-      const watching = state.items.filter(i => i.status === "Watching").length;
-      const completed = state.items.filter(i => i.status === "Completed").length;
-      let totalImdb = 0, imdbCount = 0;
-      state.items.forEach(i => { let p = parseFloat(i.imdbRating); if (!isNaN(p)) { totalImdb += p; imdbCount++; } });
-      const imdbAvg = imdbCount > 0 ? (totalImdb / imdbCount).toFixed(1) : "0.0";
-      let totalUR = 0, urCount = 0;
-      state.items.forEach(i => { if (i.userRating > 0) { totalUR += i.userRating; urCount++; } });
-      const userAvg = urCount > 0 ? (totalUR / urCount).toFixed(1) : "0.0";
-      let genreFreq = {};
-      state.items.forEach(i => { if (i.genre && i.genre !== "N/A") i.genre.split(",").forEach(g => { let cg = g.trim(); genreFreq[cg] = (genreFreq[cg] || 0) + 1; }); });
-      let favGenre = "نامشخص", max = 0;
-      for (let g in genreFreq) { if (genreFreq[g] > max) { max = genreFreq[g]; favGenre = g; } }
-      container.innerHTML = `
-        <div class="stat-card"><h3>${total}</h3><p>کل عناوین</p></div>
-        <div class="stat-card"><h3>${watching}</h3><p>⏳ در حال تماشا</p></div>
-        <div class="stat-card"><h3>${completed}</h3><p>✅ تمام شده</p></div>
-        <div class="stat-card"><h3>⭐ ${imdbAvg}</h3><p>میانگین IMDb</p></div>
-        <div class="stat-card"><h3>★ ${userAvg}</h3><p>میانگین امتیازهای من</p></div>
-        <div class="stat-card"><h3 style="font-size:16px;color:var(--cyan);">${favGenre}</h3><p>🎭 ژانر محبوب</p></div>`;
+    // Archive upload handler
+    async function handleArchiveHtmlUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const content = e.target.result;
+        state.archiveHtmlSource = content;
+        await saveArchiveToDB(content);
+        document.getElementById("archiveUploadStatus").innerText = "✅ فایل آرشیو با موفقیت بارگذاری و ذخیره شد.";
+      };
+      reader.readAsText(file);
     }
 
-    // ==================== AI RECOMMENDATIONS (via AvalAI) ====================
-    async function generateSimilarRecommendations(id) {
-      const item = state.items.find(i => i.id === id);
-      if (!item) return;
-      const responseBox = document.getElementById("aiSimilarRecommendations"); if (!responseBox) return;
-      responseBox.style.display = "block";
-      responseBox.innerHTML = `<span style="color:var(--cyan);">⏳ در حال تحلیل...</span>`;
-      const sysPrompt = `You are CineTrack AI. Recommend 5 movies or TV shows similar to the user's title. STRICTLY in Persian (Farsi). Use emojis and bullet points.`;
-      const userText = `Title: "${item.title}". Type: ${item.type}. Genre: ${item.genre}. Plot: ${item.plot}. Give 5 recommendations.`;
-      try {
-        const analysis = await callAIAPI(sysPrompt, userText);
-        responseBox.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:12px;"><h4 style="font-size:15px;font-weight:800;">🤖 عناوین مشابه</h4><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="document.getElementById('aiSimilarRecommendations').style.display='none'">✖</button></div><div style="font-size:14px;line-height:1.9;white-space:pre-wrap;">${sanitizeAIResponse(analysis)}</div>`;
-      } catch (err) {
-        responseBox.innerHTML = `<span style="color:#ef4444;">خطا: ${err.message}</span>`;
-      }
-    }
-
-    async function generateGlobalAIAnalysis(forceRegen = false) {
-      if (!forceRegen && state.globalAiCache) {
-        document.getElementById("globalAiResponse").innerHTML = state.globalAiCache;
-        return;
-      }
-      const btn = document.querySelector(".ai-global-panel .btn");
-      const responseBox = document.getElementById("globalAiResponse");
-      btn.disabled = true;
-      responseBox.innerText = "⏳ در حال آنالیز...";
-      const safeData = state.items.map(i => ({ title: i.title, type: i.type, genre: i.genre, rating: i.imdbRating }));
-      const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. STRICTLY in Persian (Farsi). Highlight patterns, favorite genres, and suggest missing masterpieces. Use beautiful formatting with emojis.`;
-      try {
-        const analysis = await callAIAPI(sysPrompt, JSON.stringify(safeData));
-        const sanitized = sanitizeAIResponse(analysis);
-        state.globalAiCache = sanitized;
-        localStorage.setItem("cinetrack_global_ai_cache", sanitized);
-        responseBox.innerHTML = sanitized;
-        document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
-      } catch (err) {
-        responseBox.innerText = `خطا: ${err.message}`;
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    // ==================== IMPORT / EXPORT ====================
+    // Import/Export
     function exportLibrary() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.items, null, 2));
       const dlAnchor = document.createElement('a'); dlAnchor.setAttribute("href", dataStr); dlAnchor.setAttribute("download", `cinetrack_library.json`); document.body.appendChild(dlAnchor); dlAnchor.click(); dlAnchor.remove();
@@ -1273,10 +1392,13 @@
       reader.readAsText(file);
     }
 
-    function openNotesModal()    { document.getElementById("notesModal").classList.add("active"); }
+    // Notes & Settings
+    function openNotesModal() { document.getElementById("notesModal").classList.add("active"); }
     function saveGeneralNotes(v) { localStorage.setItem("cinetrack_general_notes", v); }
-    function openSettingsModal() { document.getElementById("settingsModal").classList.add("active"); }
-
+    function openSettingsModal() {
+      document.getElementById("uiLanguageSetting").value = state.uiLanguage;
+      document.getElementById("settingsModal").classList.add("active");
+    }
     function saveSettings() {
       const lang = document.getElementById("uiLanguageSetting").value;
       state.uiLanguage = lang;
@@ -1284,15 +1406,168 @@
       alert("تنظیمات ذخیره شد.");
       closeModal('settingsModal'); renderHero();
     }
-
     function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+
+    // Voice recognition
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'fa-IR';
+        recognition.interimResults = false;
+        recognition.onresult = function(event) {
+          const textarea = document.getElementById("audioReviewTextarea");
+          if (textarea) {
+            textarea.value = (textarea.value + " " + event.results[0][0].transcript).trim();
+            saveAudioReview(state.selectedId, textarea.value);
+          }
+          setRecordingState(false);
+        };
+        recognition.onerror = () => setRecordingState(false);
+        recognition.onend = () => setRecordingState(false);
+      }
+    }
+    function toggleVoiceInput() {
+      if (!recognition) { alert("سیستم تشخیص صدا پشتیبانی نمی‌شود."); return; }
+      const recBtn = document.getElementById("voiceRecBtn");
+      if (recBtn.classList.contains("recording")) recognition.stop();
+      else { setRecordingState(true); recognition.start(); }
+    }
+    function setRecordingState(isRec) {
+      const recBtn = document.getElementById("voiceRecBtn");
+      if (!recBtn) return;
+      if (isRec) { recBtn.classList.add("recording"); recBtn.innerHTML = "🛑 در حال ضبط..."; }
+      else { recBtn.classList.remove("recording"); recBtn.innerHTML = "🎙️ ضبط صدا"; }
+    }
+    function saveAudioReview(id, text) {
+      state.audioReviews[id] = text;
+      localStorage.setItem("cinetrack_audio_reviews", JSON.stringify(state.audioReviews));
+    }
+
+    // ==================== AI ASSISTANT ====================
+    function toggleAIAssistant() {
+      const panel = document.getElementById("aiAssistantPanel");
+      panel.classList.toggle("hidden");
+    }
+
+    async function sendAIMessage() {
+      const input = document.getElementById("aiChatInput");
+      const msg = input.value.trim();
+      if (!msg) return;
+      input.value = "";
+      addChatMessage("user", msg);
+      addChatMessage("assistant", "🤔 در حال پردازش...");
+
+      const assistantMsgDiv = document.querySelector("#aiChatMessages .chat-message:last-child");
+      try {
+        // Prepare system prompt with full context
+        const librarySummary = state.items.map(i => `${i.title} (${i.type}) - IMDb:${i.imdbRating} - My rating:${i.userRating} - Status:${i.status}`).join("\n");
+        const systemPrompt = `You are an AI assistant for CineTrack, a movie/TV library manager. You have full access to the user's library and can perform actions.
+Current library summary:
+${librarySummary}
+
+Available actions (you can call these by outputting a JSON object in your response):
+- ADD_MOVIE: { "action": "add", "title": "Movie Name" } → will search OMDB and open add modal (user must confirm details)
+- UPDATE_RATING: { "action": "rate", "title": "Exact Title", "rating": 1-5 }
+- UPDATE_PROGRESS: { "action": "progress", "title": "Exact Title", "season": X, "episode": Y } (for series)
+- DELETE: { "action": "delete", "title": "Exact Title" }
+- SEARCH_IMDB: { "action": "search", "query": "something" } → shows search results
+- SHOW_LIBRARY: just respond with listing.
+- EXTRACT_LINKS: { "action": "links", "title": "Exact Title" } → runs archive link extraction for that title.
+
+If user asks to add a movie, respond with a JSON action. If asking for info, answer naturally in Persian.
+Keep responses short and helpful. Do not execute actions without user confirmation.
+After performing an action, explain what you did.`;
+        const userPrompt = `User command: ${msg}`;
+        const aiResponse = await callAIAPI(systemPrompt, userPrompt);
+        // Try to parse JSON action
+        let action = null;
+        try {
+          const jsonMatch = aiResponse.match(/\{.*\}/s);
+          if (jsonMatch) action = JSON.parse(jsonMatch[0]);
+        } catch(e) {}
+        if (action && action.action) {
+          await handleAssistantAction(action);
+          assistantMsgDiv.innerHTML = `✅ عملیات ${action.action} انجام شد.`;
+        } else {
+          assistantMsgDiv.innerHTML = sanitizeAIResponse(aiResponse);
+        }
+      } catch (err) {
+        assistantMsgDiv.innerHTML = `❌ خطا: ${err.message}`;
+      }
+    }
+
+    async function handleAssistantAction(action) {
+      switch(action.action) {
+        case "add":
+          if (action.title) {
+            // Search OMDB and open modal
+            const searchRes = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&t=${encodeURIComponent(action.title)}&plot=full`);
+            const data = await searchRes.json();
+            if (data.Response === "True") {
+              openAddModal(data);
+            } else {
+              alert("عنوان یافت نشد.");
+            }
+          }
+          break;
+        case "rate":
+          const itemRate = state.items.find(i => i.title.toLowerCase() === action.title.toLowerCase());
+          if (itemRate) {
+            itemRate.userRating = action.rating;
+            saveStateToStorage();
+            renderGrid();
+            renderHero();
+          } else alert("عنوان در کتابخانه یافت نشد.");
+          break;
+        case "progress":
+          const itemProg = state.items.find(i => i.title.toLowerCase() === action.title.toLowerCase());
+          if (itemProg && itemProg.type === 'series') {
+            itemProg.season = action.season;
+            itemProg.episode = action.episode;
+            saveStateToStorage();
+            renderGrid();
+            renderHero();
+          } else alert("سریال یافت نشد یا عنوان سریال نیست.");
+          break;
+        case "delete":
+          const itemDel = state.items.find(i => i.title.toLowerCase() === action.title.toLowerCase());
+          if (itemDel && confirm(`آیا ${itemDel.title} حذف شود؟`)) deleteItem(itemDel.id);
+          break;
+        case "search":
+          if (action.query) {
+            document.getElementById("searchInput").value = action.query;
+            handleSearch(action.query);
+          }
+          break;
+        case "links":
+          const itemLink = state.items.find(i => i.title.toLowerCase() === action.title.toLowerCase());
+          if (itemLink) matchAndExtractLinks(itemLink.id);
+          else alert("عنوان یافت نشد.");
+          break;
+      }
+    }
+
+    function addChatMessage(role, text) {
+      const container = document.getElementById("aiChatMessages");
+      const div = document.createElement("div");
+      div.className = `chat-message ${role}`;
+      div.innerHTML = sanitizeAIResponse(text);
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
 
     // ==================== INIT ====================
     async function init() {
+      loadStateFromStorage();
       state.archiveHtmlSource = await loadArchiveFromDB();
-      renderDashboard(); extractAndRenderGenres(); renderGrid(); renderHero();
-      setupFilterButtonsUI(); renderWatchNext(); initSpeechRecognition();
-
+      renderDashboard();
+      extractAndRenderGenres();
+      renderGrid();
+      renderHero();
+      renderWatchNext();
+      initSpeechRecognition();
       document.getElementById("uiLanguageSetting").value = state.uiLanguage;
       if (state.archiveHtmlSource) {
         document.getElementById("archiveUploadStatus").innerText = "✅ فایل آرشیو بارگذاری شد.";
@@ -1302,6 +1577,8 @@
         document.getElementById("globalAiResponse").innerHTML = state.globalAiCache;
         document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
       }
+      // Assistant button
+      document.getElementById("aiAssistantBtn").onclick = toggleAIAssistant;
     }
 
     window.onload = init;
