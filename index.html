@@ -3,198 +3,311 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CineTrack AI Ultimate Edition</title>
+  <title>CineTrack AI — Ultimate Edition</title>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-main: #f8fafc;
-      --bg-surface: #ffffff;
-      --bg-card: #ffffff;
-      --accent: #e50914;
-      --accent-hover: #b80710;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-      --cyan: #0ea5e9;
+      --bg-primary: #0d0f1a;
+      --bg-secondary: #151829;
+      --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.08);
+      --accent: #ff4d6a;
+      --accent-hover: #e64255;
+      --text-primary: #f0f0f5;
+      --text-secondary: #a0a4b8;
+      --shadow: 0 4px 12px rgba(0,0,0,0.3);
+      --glass: rgba(255,255,255,0.05);
+      --glass-border: rgba(255,255,255,0.1);
+      --gradient-hero: linear-gradient(135deg, #1e1b4b, #0f172a);
+      --cyan: #22d3ee;
       --green: #10b981;
-      --blue: #2563eb;
+      --blue: #60a5fa;
+      --radius: 16px;
+      --radius-sm: 12px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif;
-        transition: background-color 0.2s ease, border-color 0.2s ease; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; transition: all 0.2s ease; }
+    body { background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; padding-bottom: 60px; }
 
-    body { background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden;
-           padding-bottom: 60px; -webkit-font-smoothing: antialiased; }
+    /* glassmorphism utility */
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+    }
 
     header {
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--border);
-      padding: 15px 30px; display: flex; justify-content: space-between;
-      align-items: center; position: sticky; top: 0; z-index: 100;
-      box-shadow: var(--shadow); flex-wrap: wrap; gap: 15px;
+      background: rgba(13,15,26,0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; justify-content: space-between;
+      align-items: center; position: sticky; top: 0; z-index: 100; gap: 20px; flex-wrap: wrap;
     }
 
-    .brand { font-size: 22px; font-weight: 900; color: var(--accent); letter-spacing: -0.5px;
-             display: flex; align-items: center; gap: 8px; }
+    .brand {
+      font-size: 26px; font-weight: 900; color: var(--accent); display: flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, #ff4d6a, #ff8fa3); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text;
+    }
 
-    .search-container { position: relative; width: 35%; max-width: 500px; min-width: 250px; }
+    .search-container { position: relative; width: 38%; max-width: 480px; min-width: 260px; }
 
-    .search-wrapper { display: flex; align-items: center; background: #f1f5f9; border: 1px solid var(--border); border-radius: 12px;
-                      padding: 2px 15px; }
-    .search-wrapper input { flex: 1; background: transparent; border: none; color: var(--text-main); padding: 10px;
-                            font-size: 14px; outline: none; }
-    .search-wrapper button { background: transparent; border: none; color: var(--text-muted); cursor: pointer;
-                             font-size: 14px; padding-left: 5px; }
+    .search-wrapper {
+      display: flex; align-items: center; background: rgba(255,255,255,0.07); border: 1px solid var(--glass-border);
+      border-radius: 14px; padding: 2px 16px; backdrop-filter: blur(8px);
+    }
+    .search-wrapper input {
+      flex: 1; background: transparent; border: none; color: var(--text-primary); padding: 12px 0;
+      font-size: 14px; outline: none;
+    }
+    .search-wrapper button {
+      background: transparent; border: none; color: var(--text-secondary); cursor: pointer;
+      font-size: 16px; padding: 0 6px;
+    }
 
-    .search-dropdown { position: absolute; top: 110%; left: 0; right: 0; background: var(--bg-surface);
-                       border: 1px solid var(--border); border-radius: 12px; max-height: 400px; overflow-y: auto; z-index: 200; box-shadow: var(--shadow-lg); display: none; }
+    .search-dropdown {
+      position: absolute; top: 110%; left: 0; right: 0; background: var(--bg-secondary);
+      border: 1px solid var(--glass-border); border-radius: var(--radius-sm); max-height: 400px; overflow-y: auto;
+      z-index: 200; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none;
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    }
 
-    .search-item { display: flex; gap: 15px; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; align-items: center; }
-    .search-item:hover { background: #f8fafc; }
-    .search-item img { width: 40px; height: 58px; object-fit: cover; border-radius: 6px; background: #e2e8f0; }
-    .search-item .info h4 { font-size: 14px; margin-bottom: 2px; color: var(--text-main); font-weight: 700; }
-    .search-item .info p { font-size: 12px; color: var(--text-muted); }
+    .search-item {
+      display: flex; gap: 16px; padding: 14px; border-bottom: 1px solid var(--border); cursor: pointer; align-items: center;
+    }
+    .search-item:hover { background: rgba(255,255,255,0.05); }
+    .search-item img { width: 45px; height: 65px; object-fit: cover; border-radius: 8px; background: #1e1e2f; }
+    .search-item .info h4 { font-size: 14px; margin-bottom: 4px; color: var(--text-primary); font-weight: 700; }
+    .search-item .info p { font-size: 12px; color: var(--text-secondary); }
 
-    .nav-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .nav-actions { display: flex; gap: 12px; }
 
-    .btn { background: var(--accent); color: white; border: none; padding: 9px 18px; border-radius: 10px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
-           font-size: 13px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-    .btn:hover { background: var(--accent-hover); }
-    .btn-secondary { background: #ffffff; border: 1px solid var(--border); color: var(--text-main); }
-    .btn-secondary:hover { background: #f1f5f9; border-color: #cbd5e1; }
+    .btn {
+      background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer;
+      font-weight: 600; display: inline-flex; align-items: center; gap: 8px; font-size: 13px;
+      box-shadow: 0 4px 12px rgba(255,77,106,0.3); transition: all 0.2s;
+    }
+    .btn:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,77,106,0.4); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); color: var(--text-primary);
+      box-shadow: none;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
     .btn-delete { background: #ef4444; color: white; }
     .btn-delete:hover { background: #dc2626; }
-    .btn-stream { background: var(--green) !important; color: white !important; }
+    .btn-stream { background: var(--green) !important; color: white !important; box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
     .btn-stream:hover { background: #059669 !important; }
-    .btn-stream-next { background: var(--blue) !important; color: white !important; }
-    .btn-stream-next:hover { background: #1d4ed8 !important; }
+    .btn-stream-next { background: var(--blue) !important; color: white !important; box-shadow: 0 4px 12px rgba(96,165,250,0.3); }
+    .btn-stream-next:hover { background: #2563eb !important; }
 
-    .hero-section { margin: 30px; background: var(--bg-surface); border-radius: 16px; padding: 30px; border: 1px solid var(--border); position: relative; min-height: 250px; display: flex; align-items: center; box-shadow: var(--shadow); }
+    .section-title {
+      margin: 32px 32px 16px; font-size: 20px; font-weight: 800; display: flex; align-items: center;
+      gap: 10px; color: var(--text-primary);
+    }
 
-    .hero-empty { text-align: center; width: 100%; color: var(--text-muted); font-size: 16px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .hero-section {
+      margin: 32px; background: var(--gradient-hero); border-radius: var(--radius); padding: 32px;
+      border: 1px solid var(--glass-border); min-height: 260px; display: flex; align-items: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
 
-    .hero-content { display: flex; gap: 35px; width: 100%; align-items: flex-start; }
+    .hero-empty { text-align: center; width: 100%; color: var(--text-secondary); font-size: 18px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
 
-    .hero-poster { width: 220px; height: 320px; object-fit: cover; border-radius: 12px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
+    .hero-content { display: flex; gap: 32px; width: 100%; align-items: flex-start; }
+
+    .hero-poster {
+      width: 240px; height: 340px; object-fit: cover; border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15);
+    }
 
     .hero-details { flex: 1; }
 
-    .hero-title { font-size: 28px; font-weight: 800; margin-bottom: 12px; color: var(--text-main); }
+    .hero-title { font-size: 32px; font-weight: 900; margin-bottom: 14px; color: white; letter-spacing: -0.5px; }
 
-    .hero-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; font-size: 13px; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; font-size: 13px; }
 
-    .badge { background: #f1f5f9; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--text-muted); border: 1px solid var(--border); }
-    .badge-status { background: rgba(229, 9, 20, 0.08); color: var(--accent); border-color: rgba(229, 9, 20, 0.15); }
+    .badge {
+      background: rgba(255,255,255,0.08); padding: 5px 14px; border-radius: 20px; font-size: 13px;
+      font-weight: 600; color: var(--text-secondary); border: 1px solid var(--glass-border);
+    }
+    .badge-status { background: rgba(255,77,106,0.15); color: var(--accent); border-color: rgba(255,77,106,0.25); }
 
-    .hero-extended-info { background: #f8fafc; padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
-    .extended-row { font-size: 13px; line-height: 1.5; color: var(--text-main); }
-    .extended-row strong { color: var(--text-muted); font-weight: 600; display: inline-block; width: 110px; }
+    .hero-extended-info {
+      background: rgba(255,255,255,0.03); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px;
+      border: 1px solid var(--glass-border); display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;
+    }
+    .extended-row { font-size: 13px; line-height: 1.6; color: var(--text-primary); }
+    .extended-row strong { color: var(--text-secondary); font-weight: 600; display: inline-block; width: 120px; }
 
-    .hero-plot { font-size: 14.5px; line-height: 1.75; color: #334155; margin-bottom: 25px; }
+    .hero-plot { font-size: 15px; line-height: 1.9; color: #d0d4e0; margin-bottom: 28px; }
 
-    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 25px; border-top: 1px solid var(--border); padding-top: 20px; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; border-top: 1px solid var(--glass-border); padding-top: 24px; }
 
-    .episode-progress-block { background: rgba(14, 165, 233, 0.04); border: 1px solid rgba(14, 165, 233, 0.15); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
-    .episode-progress-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-    .episode-progress-title { font-size: 14px; font-weight: 700; color: var(--cyan); }
-    .episode-progress-count { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+    .episode-progress-block {
+      background: rgba(34,211,238,0.05); border: 1px solid rgba(34,211,238,0.15); border-radius: var(--radius-sm);
+      padding: 18px; margin-bottom: 24px;
+    }
+    .episode-progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .episode-progress-title { font-size: 15px; font-weight: 700; color: var(--cyan); }
+    .episode-progress-count { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
 
-    .progress-container { width: 100%; background: #e2e8f0; border-radius: 10px; height: 6px; overflow: hidden; }
-    .progress-bar { height: 100%; background: var(--cyan); width: 0%; border-radius: 10px; transition: width 0.5s ease-in-out; }
+    .progress-container { width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; height: 8px; overflow: hidden; }
+    .progress-bar { height: 100%; background: var(--cyan); width: 0%; border-radius: 10px; transition: width 0.6s ease; }
 
-    .audio-review-block { background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%); border: 1.5px solid rgba(14, 165, 233, 0.2); border-radius: 16px; padding: 18px; margin-top: 20px; box-shadow: 0 2px 12px rgba(14, 165, 233, 0.06); position: relative; }
-    .audio-review-block::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--cyan), var(--blue)); border-radius: 16px 16px 0 0; }
-    .audio-controls { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center; }
-    .review-textarea { width: 100%; min-height: 90px; resize: vertical; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: 1.5px solid rgba(14, 165, 233, 0.15); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; line-height: 1.7; color: var(--text-main); font-family: 'Vazirmatn', sans-serif; outline: none; transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box; }
-    .review-textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
-    .review-textarea::placeholder { color: #94a3b8; }
-    .voice-rec-btn { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border: 1.5px solid var(--border); color: var(--text-main); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .audio-review-block {
+      background: linear-gradient(135deg, rgba(34,211,238,0.04) 0%, rgba(96,165,250,0.06) 100%);
+      border: 1.5px solid rgba(34,211,238,0.2); border-radius: var(--radius-sm); padding: 22px; margin-top: 24px;
+      position: relative;
+    }
+    .audio-review-block::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--cyan), var(--blue)); border-radius: 12px 12px 0 0; }
+    .audio-controls { display: flex; justify-content: space-between; margin-bottom: 14px; align-items: center; }
+    .review-textarea {
+      width: 100%; min-height: 100px; resize: vertical; background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm); padding: 14px;
+      font-size: 14px; line-height: 1.8; color: var(--text-primary); outline: none;
+      backdrop-filter: blur(4px);
+    }
+    .review-textarea:focus { border-color: var(--cyan); }
+    .voice-rec-btn {
+      background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); color: var(--text-primary);
+      padding: 8px 18px; border-radius: 24px; cursor: pointer; font-size: 12px; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
     .voice-rec-btn:hover { border-color: var(--cyan); color: var(--cyan); }
-    .voice-rec-btn.recording { background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; color: #b45309; animation: pulse-rec 1.2s infinite; }
-    @keyframes pulse-rec { 0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); } }
+    .voice-rec-btn.recording { background: rgba(245,158,11,0.15); border-color: #f59e0b; color: #f59e0b; animation: pulse-rec 1.2s infinite; }
+    @keyframes pulse-rec { 0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); } 50% { box-shadow: 0 0 0 10px rgba(245,158,11,0); } }
 
-    .dashboard-stats { margin: 0 30px 30px 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; }
+    .dashboard-stats {
+      margin: 24px 32px 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+      padding: 20px; text-align: center; backdrop-filter: blur(12px);
+    }
+    .stat-card h3 { font-size: 28px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
+    .stat-card p { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
 
-    .stat-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 15px; text-align: center; box-shadow: var(--shadow); }
-    .stat-card h3 { font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
-    .stat-card p { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .watch-next-container {
+      margin: 0 32px 32px; background: var(--surface); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); padding: 24px; backdrop-filter: blur(12px);
+    }
 
-    .section-title { margin: 25px 30px 12px 30px; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+    .controls-bar {
+      margin: 0 32px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+    }
 
-    .watch-next-container { margin: 0 30px 30px 30px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+    .filters-group { display: flex; gap: 8px; flex-wrap: wrap; }
 
-    .controls-bar { margin: 0 30px 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+    .filter-btn {
+      background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); color: var(--text-secondary);
+      padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
+    }
+    .filter-btn:hover { background: rgba(255,255,255,0.1); }
+    .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-    .filters-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    select.sort-select, select.form-control, input.form-control {
+      background: rgba(255,255,255,0.05); color: var(--text-primary); border: 1px solid var(--glass-border);
+      padding: 10px 14px; border-radius: 10px; outline: none; font-size: 13px; font-weight: 500; width: 100%;
+    }
 
-    .filter-btn { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 10px; cursor: pointer; font-size: 12.5px; font-weight: 600; }
-    .filter-btn:hover { background: #f1f5f9; }
-    .filter-btn.active { background: var(--text-main); color: #fff; border-color: var(--text-main); }
+    .main-grid {
+      margin: 0 32px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 24px;
+    }
 
-    select.sort-select, select.form-control, input.form-control { background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; outline: none; font-size: 13px; font-weight: 600; width: 100%; box-sizing: border-box;}
-    select.sort-select:hover, input.form-control:focus { border-color: #cbd5e1; }
+    .movie-card {
+      background: var(--surface); border-radius: var(--radius-sm); overflow: hidden;
+      border: 1px solid var(--glass-border); position: relative; cursor: pointer;
+      backdrop-filter: blur(12px); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .movie-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.4); }
+    .movie-card.selected { border-color: var(--accent); }
 
-    .main-grid { margin: 0 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
-
-    .movie-card { background: var(--bg-surface); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); position: relative; cursor: pointer; box-shadow: var(--shadow); }
-    .movie-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-    .movie-card.selected { border-color: var(--text-main); border-width: 2px; }
-
-    .card-poster-wrapper { position: relative; width: 100%; height: 250px; background: #e2e8f0; }
+    .card-poster-wrapper { position: relative; width: 100%; height: 270px; background: #1a1c2e; }
     .card-poster-wrapper img { width: 100%; height: 100%; object-fit: cover; }
 
-    .card-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; opacity: 0; padding: 15px; text-align: center; color: white; }
+    .card-overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(0deg, rgba(13,15,26,0.9) 0%, rgba(13,15,26,0.7) 100%);
+      display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; opacity: 0; padding: 16px; text-align: center; color: white;
+    }
     .movie-card:hover .card-overlay { opacity: 1; }
 
-    .card-info { padding: 12px; }
-    .card-title { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; color: var(--text-main); }
-    .card-meta-line { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500; }
-    .card-progress { background: rgba(14, 165, 233, 0.08); border-radius: 6px; padding: 3px 6px; font-size: 11px; color: var(--cyan); font-weight: 700; text-align: center; margin-top: 6px; }
+    .card-info { padding: 14px; }
+    .card-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px; color: var(--text-primary); }
+    .card-meta-line { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+    .card-progress { background: rgba(34,211,238,0.1); border-radius: 6px; padding: 4px 8px; font-size: 11px; color: var(--cyan); font-weight: 700; text-align: center; margin-top: 8px; }
 
-    .ai-global-panel { margin: 40px 30px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 25px; box-shadow: var(--shadow); }
-    .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; flex-wrap: wrap; gap: 15px; }
-    .ai-response { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid var(--border); min-height: 100px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; color: #334155; }
+    .ai-global-panel {
+      margin: 40px 32px; background: var(--surface); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); padding: 28px; backdrop-filter: blur(12px);
+    }
+    .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--glass-border); padding-bottom: 20px; flex-wrap: wrap; gap: 16px; }
+    .ai-response {
+      background: rgba(255,255,255,0.02); padding: 24px; border-radius: var(--radius-sm); min-height: 120px;
+      font-size: 14px; line-height: 2; white-space: pre-wrap; color: #cbd5e1; border: 1px solid var(--glass-border);
+    }
 
-    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(4px); z-index: 300; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; }
+    .modal-backdrop {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px); z-index: 300; display: flex; justify-content: center; align-items: center;
+      opacity: 0; pointer-events: none;
+    }
     .modal-backdrop.active { opacity: 1; pointer-events: auto; }
 
-    .modal-box { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; width: 90%; max-width: 580px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); padding: 25px; color: var(--text-main); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+    .modal-box {
+      background: var(--bg-secondary); border: 1px solid var(--glass-border); border-radius: var(--radius);
+      width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      padding: 28px; color: var(--text-primary);
+    }
 
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; margin-bottom: 6px; font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
-    
-    .form-row { display: flex; gap: 12px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--glass-border); padding-bottom: 16px; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+    .form-row { display: flex; gap: 14px; }
     .form-row .form-group { flex: 1; }
 
-    .stars-rating { display: flex; gap: 4px; font-size: 22px; cursor: pointer; color: #cbd5e1; user-select: none; }
-    .stars-rating span.active { color: #ffb020; }
+    .stars-rating { display: flex; gap: 6px; font-size: 26px; cursor: pointer; color: #4b5563; user-select: none; }
+    .stars-rating span.active { color: #fbbf24; }
 
-    .backup-section { margin: 25px 30px; display: flex; gap: 10px; }
-    .watch-next-badge { display: inline-block; background: rgba(14, 165, 233, 0.08); color: var(--cyan); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 700; margin-top: 5px; }
+    .backup-section { margin: 32px; display: flex; gap: 12px; }
 
-    .quality-section-wrapper { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
-    .quality-block-title { font-size: 14.5px; font-weight: 800; padding-bottom: 4px; border-bottom: 2px solid var(--border); margin-bottom: 8px; }
-    .quality-block-title.softsub { color: var(--blue); border-bottom-color: rgba(37, 99, 235, 0.2); }
-    .quality-block-title.dubbed { color: var(--green); border-bottom-color: rgba(16, 185, 129, 0.2); }
-    
-    .movie-quality-line { display: block; font-size: 13.5px; padding: 8px 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; color: var(--text-main); text-decoration: none; font-weight: 500; margin-bottom: 6px; }
-    .movie-quality-line:hover { background: #f1f5f9; border-color: #cbd5e1; }
-    
-    .series-season-container { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
-    .series-season-title { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
-    .series-qualities-row { font-size: 13.5px; font-weight: 600; line-height: 1.6; color: var(--text-main); }
+    .quality-section-wrapper { display: flex; flex-direction: column; gap: 18px; margin-top: 12px; }
+    .quality-block-title { font-size: 15px; font-weight: 800; padding-bottom: 6px; border-bottom: 2px solid var(--glass-border); margin-bottom: 10px; }
+    .quality-block-title.softsub { color: var(--blue); border-bottom-color: rgba(96,165,250,0.4); }
+    .quality-block-title.dubbed { color: var(--green); border-bottom-color: rgba(16,185,129,0.4); }
+
+    .movie-quality-line {
+      display: block; font-size: 14px; padding: 10px 16px; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); text-decoration: none;
+      font-weight: 500; margin-bottom: 8px;
+    }
+    .movie-quality-line:hover { background: rgba(255,255,255,0.08); }
+
+    .series-season-container {
+      background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 10px;
+      padding: 14px; margin-bottom: 10px;
+    }
+    .series-season-title { font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; }
+    .series-qualities-row { font-size: 14px; font-weight: 600; line-height: 1.8; color: var(--text-primary); }
     .series-qualities-row a { color: var(--cyan); text-decoration: none; }
     .series-qualities-row a:hover { text-decoration: underline; }
 
-    .stage-indicator { display: flex; align-items: center; gap: 10px; padding: 12px 15px; background: #f0f9ff; border: 1px solid rgba(14,165,233,0.2); border-radius: 10px; font-size: 13px; color: var(--cyan); font-weight: 600; }
-    .stage-spinner { width: 16px; height: 16px; border: 2px solid rgba(14,165,233,0.2); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+    .stage-indicator {
+      display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: rgba(34,211,238,0.05);
+      border: 1px solid rgba(34,211,238,0.15); border-radius: 10px; font-size: 14px; color: var(--cyan); font-weight: 600;
+    }
+    .stage-spinner { width: 18px; height: 18px; border: 2px solid rgba(34,211,238,0.2); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .load-more-btn { text-align: center; padding: 12px; background: #f1f5f9; margin-top: 8px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--cyan); border: 1px solid var(--border); }
-    .load-more-btn:hover { background: #e2e8f0; }
+    .load-more-btn {
+      text-align: center; padding: 14px; background: rgba(255,255,255,0.03); margin-top: 10px;
+      border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--cyan);
+      border: 1px solid var(--glass-border);
+    }
+    .load-more-btn:hover { background: rgba(255,255,255,0.08); }
 
     @media (max-width: 768px) {
       .hero-content { flex-direction: column; align-items: center; }
@@ -207,7 +320,7 @@
 <body>
 
   <header>
-    <div class="brand">🎬 CineTrack AI <span style="font-size:11px; background:var(--text-main); color:#fff; padding:2px 8px; border-radius:6px; margin-right:5px;">ULTIMATE</span></div>
+    <div class="brand">🎬 CineTrack AI <span style="font-size:12px; background:rgba(255,255,255,0.1); color:#fff; padding:3px 10px; border-radius:8px; margin-right:6px;">ULTIMATE</span></div>
 
     <div class="search-container">
       <div class="search-wrapper">
@@ -219,18 +332,18 @@
 
     <div class="nav-actions">
       <button class="btn btn-secondary" onclick="openNotesModal()">📝 یادداشت‌ها</button>
-      <button class="btn btn-secondary" onclick="openSettingsModal()">⚙️ تنظیمات سیستم</button>
+      <button class="btn btn-secondary" onclick="openSettingsModal()">⚙️ تنظیمات</button>
     </div>
   </header>
 
   <section class="section-title">🎯 پیشنهاد تماشای بعدی</section>
   <section class="watch-next-container" id="watchNextContainer">
-    <p style="color:var(--text-muted); font-size:13px;">در حال ارزیابی الگوها و استخراج اولویت تماشا...</p>
+    <p style="color:var(--text-secondary); font-size:14px;">در حال ارزیابی الگوها...</p>
   </section>
 
   <section class="hero-section" id="heroSection"></section>
 
-  <section class="section-title">📊 داشبورد وضعیت و آمار کتابخانه</section>
+  <section class="section-title">📊 داشبورد کتابخانه</section>
   <section class="dashboard-stats" id="dashboardStats"></section>
 
   <section class="controls-bar">
@@ -244,7 +357,7 @@
       <button class="filter-btn" onclick="setFilter('special', 'highRated')">⭐ IMDb 8+</button>
       <button class="filter-btn" onclick="setFilter('special', 'personalTop')">🏆 محبوب‌های من</button>
     </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
       <select class="sort-select" id="genreFilterSelect" onchange="handleGenreChange(this.value)">
         <option value="all">فیلتر ژانر (همه)</option>
       </select>
@@ -268,26 +381,27 @@
 
   <section class="ai-global-panel">
     <div class="ai-header">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:22px;">🧠</span>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:28px;">🧠</span>
         <div>
-          <h3 style="font-weight:800; font-size:15px;">تحلیل هوشمند کل کتابخانه فیلم</h3>
-          <p style="font-size:12px; color:var(--text-muted);">تحلیل عادت‌ها، سلایق و پیشنهاد عناوین گمشده</p>
+          <h3 style="font-weight:800; font-size:16px;">تحلیل هوشمند کل کتابخانه</h3>
+          <p style="font-size:12px; color:var(--text-secondary);">تحلیل عادت‌ها و پیشنهاد عناوین گمشده</p>
         </div>
       </div>
-      <div style="display:flex; gap:8px;">
+      <div style="display:flex; gap:10px;">
         <button class="btn btn-secondary" id="regenGlobalAiBtn" style="display:none;" onclick="generateGlobalAIAnalysis(true)">🔄 بازتولید تحلیل</button>
         <button class="btn" onclick="generateGlobalAIAnalysis(false)">💡 آنالیز کل آرشیو</button>
       </div>
     </div>
-    <div class="ai-response" id="globalAiResponse">درخواست آنالیز کل آرشیو را صادر کنید تا موتور هوشمند بر اساس پارامترهای اعمال شده لیست شما را تحلیل کند...</div>
+    <div class="ai-response" id="globalAiResponse">درخواست آنالیز کل آرشیو را صادر کنید...</div>
   </section>
 
+  <!-- Modals -->
   <div class="modal-backdrop" id="addModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 id="modalMetaTitle" style="font-size:16px; font-weight:800;">اضافه کردن به آرشیو</h3>
-        <button class="btn btn-secondary" style="padding:4px 8px;" onclick="closeModal('addModal')">✖</button>
+        <h3 id="modalMetaTitle" style="font-size:18px; font-weight:800;">اضافه کردن به آرشیو</h3>
+        <button class="btn btn-secondary" style="padding:4px 10px;" onclick="closeModal('addModal')">✖</button>
       </div>
       <div id="addModalContent"></div>
     </div>
@@ -296,8 +410,8 @@
   <div class="modal-backdrop" id="progressModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="font-size:16px; font-weight:800;">⚙️ بروزرسانی وضعیت قسمت‌ها</h3>
-        <button class="btn btn-secondary" style="padding:4px 8px;" onclick="closeModal('progressModal')">✖</button>
+        <h3 style="font-size:18px; font-weight:800;">⚙️ بروزرسانی وضعیت قسمت‌ها</h3>
+        <button class="btn btn-secondary" style="padding:4px 10px;" onclick="closeModal('progressModal')">✖</button>
       </div>
       <div id="progressModalContent"></div>
     </div>
@@ -306,11 +420,11 @@
   <div class="modal-backdrop" id="notesModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="font-size:16px; font-weight:800;">📝 یادداشت‌های من</h3>
-        <button class="btn btn-secondary" style="padding:4px 8px;" onclick="closeModal('notesModal')">✖</button>
+        <h3 style="font-size:18px; font-weight:800;">📝 یادداشت‌های من</h3>
+        <button class="btn btn-secondary" style="padding:4px 10px;" onclick="closeModal('notesModal')">✖</button>
       </div>
       <div class="form-group">
-        <label>متن یادداشت‌ها، لیست فیلم‌های آینده یا برنامه‌ تماشا:</label>
+        <label>متن یادداشت‌ها، لیست فیلم‌های آینده یا برنامه تماشا:</label>
         <textarea id="generalNotesTextArea" class="form-control" style="min-height: 250px; resize: vertical;" oninput="saveGeneralNotes(this.value)"></textarea>
       </div>
     </div>
@@ -319,38 +433,34 @@
   <div class="modal-backdrop" id="settingsModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="font-size:16px; font-weight:800;">تنظیمات هوش مصنوعی و سورس آرشیو</h3>
-        <button class="btn btn-secondary" style="padding:4px 8px;" onclick="closeModal('settingsModal')">✖</button>
+        <h3 style="font-size:18px; font-weight:800;">تنظیمات هوش مصنوعی و سورس آرشیو</h3>
+        <button class="btn btn-secondary" style="padding:4px 10px;" onclick="closeModal('settingsModal')">✖</button>
       </div>
-
       <div class="form-group">
-        <label>زبان پیش‌فرض نمایش داستان (UI Language):</label>
+        <label>زبان پیش‌فرض نمایش داستان:</label>
         <select id="uiLanguageSetting" class="form-control">
           <option value="en">English (نمایش خلاصه اصلی انگلیسی)</option>
           <option value="fa">Persian / فارسی (ترجمه خودکار هوش مصنوعی)</option>
         </select>
       </div>
-
-      <div style="border-top: 1px solid var(--border); margin: 20px 0 15px 0; padding-top: 15px;">
-        <p style="font-size: 13px; color: var(--cyan); margin-bottom: 12px; font-weight:bold;">📥 بارگذاری فایل متنی / سورس آرشیو (ذخیره آفلاین ابدی)</p>
+      <div style="border-top: 1px solid var(--glass-border); margin: 24px 0 16px; padding-top: 18px;">
+        <p style="font-size: 14px; color: var(--cyan); margin-bottom: 14px; font-weight:bold;">📥 بارگذاری فایل متنی / سورس آرشیو (ذخیره آفلاین ابدی)</p>
         <div class="form-group">
           <label>فایل HTML دانلود شده از صفحه آرشیو را انتخاب کنید:</label>
           <input type="file" id="archiveHtmlFileInput" class="form-control" accept=".html,.htm" onchange="handleArchiveHtmlUpload(event)">
-          <div id="archiveUploadStatus" style="font-size: 12px; color: #ffb020; margin-top: 8px; font-weight: bold;"></div>
+          <div id="archiveUploadStatus" style="font-size: 12px; color: #fbbf24; margin-top: 10px; font-weight: bold;"></div>
         </div>
       </div>
-
-      <button class="btn" style="width:100%; margin-top:5px;" onclick="saveSettings()">ذخیره تنظیمات</button>
+      <button class="btn" style="width:100%; margin-top:10px;" onclick="saveSettings()">ذخیره تنظیمات</button>
     </div>
   </div>
 
   <script>
     // --- API Keys ---
     const OMDB_KEY = "4b0254f3";
-    // 🔑 Replace with your actual Groq API key (get from https://console.groq.com)
-    const GROQ_API_KEY = "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"; 
+    const GROQ_API_KEY = "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"; // 🔑 Replace with your actual key
 
-    // --- IndexedDB for Persistent Offline Archive Storage ---
+    // --- IndexedDB ---
     const DB_NAME = 'CineTrackDB';
     const DB_VERSION = 1;
     const STORE_NAME = 'archives';
@@ -393,6 +503,7 @@
       } catch (e) { console.error("IndexedDB Load Error:", e); return ""; }
     }
 
+    // --- Global State ---
     let state = {
       items: JSON.parse(localStorage.getItem("cinetrack_ultimate_db") || "[]"),
       selectedId: null,
@@ -412,7 +523,21 @@
     let currentSearchPage = 1;
     let currentSearchResults = [];
     let isLoadingMore = false;
+    let searchAbortController = null;   // for cancelling previous search requests
 
+    // --- Helper: Sanitize AI responses (escape HTML but preserve newlines) ---
+    function sanitizeAIResponse(text) {
+      if (!text) return "";
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;")
+        .replace(/\n/g, "<br>");
+    }
+
+    // --- Initialize ---
     async function init() {
       state.archiveHtmlSource = await loadArchiveFromDB();
       renderDashboard(); extractAndRenderGenres(); renderGrid(); renderHero();
@@ -420,12 +545,11 @@
 
       document.getElementById("uiLanguageSetting").value = state.uiLanguage;
       if (state.archiveHtmlSource) {
-        document.getElementById("archiveUploadStatus").innerText = "✅ فایل آرشیو با موفقیت از دیتابیس (IndexedDB) بارگذاری شد.";
+        document.getElementById("archiveUploadStatus").innerText = "✅ فایل آرشیو با موفقیت بارگذاری شد.";
       }
-
       document.getElementById("generalNotesTextArea").value = localStorage.getItem("cinetrack_general_notes") || "";
       if (state.globalAiCache) {
-        document.getElementById("globalAiResponse").innerHTML = state.globalAiCache;
+        document.getElementById("globalAiResponse").innerHTML = state.globalAiCache; // already sanitized on storage? We'll store raw but display sanitized. Actually we'll sanitize before storing.
         document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
       }
     }
@@ -443,8 +567,8 @@
         const rawText = e.target.result;
         state.archiveHtmlSource = rawText;
         await saveArchiveToDB(rawText);
-        document.getElementById("archiveUploadStatus").innerText = "✅ فایل بارگذاری و روی مرورگر ذخیره شد: " + file.name;
-        alert("سورس آرشیو با موفقیت برای استفاده همیشگی (آفلاین) ذخیره شد.");
+        document.getElementById("archiveUploadStatus").innerText = "✅ فایل بارگذاری و ذخیره شد: " + file.name;
+        alert("سورس آرشیو با موفقیت ذخیره شد.");
         if (state.selectedId) renderHero();
       };
       reader.readAsText(file);
@@ -480,22 +604,23 @@
     }
 
     function searchByBothStrict(allLinks, title, imdbID) {
-      const id  = imdbID.toLowerCase(); const rx  = buildTitleRegex(title);
+      const id  = imdbID.toLowerCase();
+      const rx  = buildTitleRegex(title);
       return allLinks.filter(l => {
-        const urlLow  = l.url.toLowerCase(); const textLow = l.text.toLowerCase();
+        const urlLow  = l.url.toLowerCase();
+        const textLow = l.text.toLowerCase();
         const hasId = urlLow.includes(id) || textLow.includes(id);
         const hasTitle = rx.test(l.url) || rx.test(l.text);
         return hasId && hasTitle;
       });
     }
 
-    // --- Groq API Engine (with better error handling) ---
+    // --- Groq API Engine ---
     async function callGroqAPI(systemPrompt, userText) {
       let key = GROQ_API_KEY.trim();
       if (!key || key === "YOUR_GROQ_API_KEY_HERE") {
-        throw new Error("⚠️ کلید API گراک (Groq) تنظیم نشده است. لطفاً آن را در const GROQ_API_KEY قرار دهید. دریافت کلید: https://console.groq.com");
+        throw new Error("⚠️ کلید API گراک تنظیم نشده است.");
       }
-      
       const url = `https://api.groq.com/openai/v1/chat/completions`;
       const payload = {
         model: "llama-3.3-70b-versatile",
@@ -505,45 +630,38 @@
         ],
         temperature: 0.4
       };
-
       const res = await fetch(url, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${key}`
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
         body: JSON.stringify(payload)
       });
-      
-      if (res.status === 401) {
-        throw new Error("❌ کلید API نامعتبر است. لطفاً یک کلید معتبر از https://console.groq.com دریافت کنید.");
-      }
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`خطای HTTP ${res.status}: ${errText.slice(0,100)}`);
-      }
+      if (res.status === 401) throw new Error("❌ کلید API نامعتبر است.");
+      if (!res.ok) { const errText = await res.text(); throw new Error(`خطای HTTP ${res.status}: ${errText.slice(0,100)}`); }
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
       return data.choices[0].message.content;
     }
 
-    // --- Enhanced OMDB search with pagination (up to 3 pages initially, then load more) ---
-    async function performSearch(query, page = 1) {
+    // --- OMDB search with abort controller ---
+    async function performSearch(query, page = 1, signal) {
       try {
-        const res = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&s=${encodeURIComponent(query)}&page=${page}`);
+        const res = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&s=${encodeURIComponent(query)}&page=${page}`, { signal });
+        if (!res.ok) throw new Error("Network error");
         const data = await res.json();
         if (data.Response === "True" && data.Search) {
           return { results: data.Search, totalResults: parseInt(data.totalResults) || 0 };
         }
         return { results: [], totalResults: 0 };
       } catch (e) {
-        console.error(e);
+        if (e.name !== 'AbortError') console.error(e);
         return { results: [], totalResults: 0 };
       }
     }
 
     async function handleSearch(query) {
       clearTimeout(searchDebounceTimer);
+      // Cancel any ongoing search
+      if (searchAbortController) searchAbortController.abort();
       const dropdown = document.getElementById("searchDropdown");
       if (!query || query.trim().length < 2) { 
         dropdown.style.display = "none"; 
@@ -556,39 +674,43 @@
       currentSearchQuery = query.trim();
       currentSearchPage = 1;
       currentSearchResults = [];
-      
+      searchAbortController = new AbortController();
+      const signal = searchAbortController.signal;
+
       searchDebounceTimer = setTimeout(async () => {
         dropdown.style.display = "block";
-        dropdown.innerHTML = `<div style="padding:15px;text-align:center;color:var(--text-muted);">🔍 در حال جستجو...</div>`;
+        dropdown.innerHTML = `<div style="padding:15px;text-align:center;color:var(--text-secondary);">🔍 در حال جستجو...</div>`;
         
-        const firstPage = await performSearch(currentSearchQuery, 1);
+        const firstPage = await performSearch(currentSearchQuery, 1, signal);
+        if (signal.aborted) return;
         currentSearchResults = firstPage.results;
         let totalLoaded = currentSearchResults.length;
         const hasMore = firstPage.totalResults > 10;
         
         renderSearchDropdown(currentSearchResults, hasMore, 1, firstPage.totalResults);
         
-        // Optionally fetch page 2 and 3 automatically for better experience
+        // Automatically fetch pages 2 and 3, updating currentSearchPage
         if (hasMore && currentSearchResults.length < 30) {
           for (let p = 2; p <= 3; p++) {
-            const nextPage = await performSearch(currentSearchQuery, p);
+            if (signal.aborted) break;
+            const nextPage = await performSearch(currentSearchQuery, p, signal);
+            if (signal.aborted) break;
             if (nextPage.results.length) {
-              // Avoid duplicates by imdbID
               const existingIds = new Set(currentSearchResults.map(r => r.imdbID));
               const newResults = nextPage.results.filter(r => !existingIds.has(r.imdbID));
               currentSearchResults.push(...newResults);
+              currentSearchPage = p; // update so load more starts at next page
               renderSearchDropdown(currentSearchResults, true, p, firstPage.totalResults);
             } else break;
           }
         }
-        renderSearchDropdown(currentSearchResults, currentSearchResults.length < firstPage.totalResults, currentSearchPage, firstPage.totalResults);
       }, 400);
     }
 
     function renderSearchDropdown(results, hasMore, currentPage, totalResults) {
       const dropdown = document.getElementById("searchDropdown");
       if (!results.length) {
-        dropdown.innerHTML = `<div style="padding:15px;font-size:13px;color:var(--text-muted);text-align:center;">نتیجه‌ای یافت نشد.</div>`;
+        dropdown.innerHTML = `<div style="padding:15px;font-size:14px;color:var(--text-secondary);text-align:center;">نتیجه‌ای یافت نشد.</div>`;
         return;
       }
       let html = results.map(item => `
@@ -610,6 +732,7 @@
       isLoadingMore = true;
       const dropdown = document.getElementById("searchDropdown");
       const nextPage = currentSearchPage + 1;
+      // Use same abort controller? Better not. We'll create a new one.
       const more = await performSearch(currentSearchQuery, nextPage);
       if (more.results.length) {
         const existingIds = new Set(currentSearchResults.map(r => r.imdbID));
@@ -626,6 +749,7 @@
       document.getElementById("searchDropdown").style.display = "none";
       currentSearchQuery = "";
       currentSearchResults = [];
+      if (searchAbortController) searchAbortController.abort();
     }
     
     function translateType(type) { 
@@ -641,9 +765,13 @@
       else {
         try {
           let res = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&i=${imdbID}&plot=full`);
+          if (!res.ok) throw new Error("Network error");
           movieData = await res.json();
-          if (movieData.Response === "True") { state.omdbCache[imdbID] = movieData; localStorage.setItem("cinetrack_omdb_cache", JSON.stringify(state.omdbCache)); }
-        } catch (e) { alert("خطا در برقراری ارتباط با OMDb"); return; }
+          if (movieData.Response === "True") { 
+            state.omdbCache[imdbID] = movieData; 
+            localStorage.setItem("cinetrack_omdb_cache", JSON.stringify(state.omdbCache)); 
+          } else { alert("اطلاعات این عنوان یافت نشد."); return; }
+        } catch (e) { alert("خطا در ارتباط با OMDb"); return; }
       }
       openAddModal(movieData);
     }
@@ -653,20 +781,20 @@
       const container = document.getElementById("addModalContent");
       const isSeries  = data.Type === "series";
       container.innerHTML = `
-        <div style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;">
-          <img src="${data.Poster !== 'N/A' ? data.Poster : 'https://via.placeholder.com/150x220?text=No+Cover'}" style="width:110px;height:160px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+        <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
+          <img src="${data.Poster !== 'N/A' ? data.Poster : 'https://via.placeholder.com/150x220?text=No+Cover'}" style="width:120px;height:170px;object-fit:cover;border-radius:10px;border:1px solid var(--glass-border);">
           <div style="flex:1;min-width:240px;">
-            <h3 style="margin-bottom:6px;font-weight:800;font-size:15px;">${data.Title}</h3>
-            <p style="font-size:12.5px;margin-bottom:4px;">📅 <b>سال:</b> ${data.Year} | ⭐ <b>امتیاز:</b> ${data.imdbRating}</p>
-            <p style="font-size:12.5px;margin-bottom:4px;">🎭 <b>ژانر:</b> ${data.Genre}</p>
-            ${isSeries && data.totalSeasons ? `<p style="font-size:12.5px;margin-bottom:4px;color:var(--blue);">📺 <b>تعداد کل فصل‌ها:</b> ${data.totalSeasons}</p>` : ''}
+            <h3 style="margin-bottom:8px;font-weight:800;font-size:16px;">${data.Title}</h3>
+            <p style="font-size:13px;margin-bottom:6px;">📅 <b>سال:</b> ${data.Year} | ⭐ <b>امتیاز:</b> ${data.imdbRating}</p>
+            <p style="font-size:13px;margin-bottom:6px;">🎭 <b>ژانر:</b> ${data.Genre}</p>
+            ${isSeries && data.totalSeasons ? `<p style="font-size:13px;margin-bottom:6px;color:var(--blue);">📺 <b>تعداد کل فصل‌ها:</b> ${data.totalSeasons}</p>` : ''}
           </div>
         </div>
         <input type="hidden" id="formImdbID" value="${data.imdbID}">
-        <div class="form-group"><label>وضعیت تماشا:</label><select id="formStatus" class="form-control" onchange="toggleModalSeriesFields(this.value, ${isSeries})"><option value="Watching">⏳ در حال تماشا (Watching)</option><option value="Planned">📅 برنامه‌ریزی شده (Planned)</option><option value="Completed">✅ تمام شده (Completed)</option></select></div>
+        <div class="form-group"><label>وضعیت تماشا:</label><select id="formStatus" class="form-control" onchange="toggleModalSeriesFields(this.value, ${isSeries})"><option value="Watching">⏳ در حال تماشا</option><option value="Planned">📅 برنامه‌ریزی شده</option><option value="Completed">✅ تمام شده</option></select></div>
         <div id="modalSeriesProgress" style="display:${isSeries ? 'block' : 'none'}"><div class="form-row"><div class="form-group"><label>فصل کنونی:</label><input type="number" id="formSeason" class="form-control" value="1" min="1"></div><div class="form-group"><label>قسمت کنونی:</label><input type="number" id="formEpisode" class="form-control" value="1" min="1"></div></div></div>
         <div class="form-group"><label>امتیاز شخصی شما:</label><div class="stars-rating" id="modalStars"><span onclick="setStarsValue(1)">★</span><span onclick="setStarsValue(2)">★</span><span onclick="setStarsValue(3)">★</span><span onclick="setStarsValue(4)">★</span><span onclick="setStarsValue(5)">★</span></div><input type="hidden" id="formUserRating" value="0"></div>
-        <button class="btn" style="width:100%;margin-top:10px;" onclick="saveItemFromModal()">💾 ذخیره در کتابخانه</button>
+        <button class="btn" style="width:100%;margin-top:14px;" onclick="saveItemFromModal()">💾 ذخیره در کتابخانه</button>
       `;
       backdrop.classList.add("active");
     }
@@ -692,11 +820,26 @@
       if (!rawCached) { isSavingItem = false; return; }
 
       let season = 1, episode = 1; const isSeries = rawCached.Type === "series";
-      if (isSeries && status !== "Completed") { season = parseInt(document.getElementById("formSeason").value) || 1; episode = parseInt(document.getElementById("formEpisode").value) || 1; }
+      if (isSeries && status !== "Completed") { 
+        season = parseInt(document.getElementById("formSeason").value) || 1; 
+        episode = parseInt(document.getElementById("formEpisode").value) || 1; 
+        // basic validation: season cannot exceed totalSeasons
+        const totalSeasons = parseInt(rawCached.totalSeasons) || 1;
+        if (season < 1) season = 1;
+        if (season > totalSeasons) season = totalSeasons;
+      }
 
       const existingIdx = state.items.findIndex(i => i.id === imdbID);
       const newItem = {
-        id: imdbID, title: rawCached.Title, type: rawCached.Type, poster: rawCached.Poster, year: rawCached.Year, imdbRating: rawCached.imdbRating, plot: rawCached.Plot, genre: rawCached.Genre, director: rawCached.Director, actors: rawCached.Actors, language: rawCached.Language, country: rawCached.Country, awards: rawCached.Awards, status, userRating, season: isSeries ? season : null, episode: isSeries ? episode : null, totalSeasons: isSeries ? rawCached.totalSeasons : null, dateAdded: existingIdx > -1 ? state.items[existingIdx].dateAdded : new Date().toISOString(), lastUpdated: new Date().toISOString()
+        id: imdbID, title: rawCached.Title, type: rawCached.Type, poster: rawCached.Poster,
+        year: rawCached.Year, imdbRating: rawCached.imdbRating, plot: rawCached.Plot,
+        genre: rawCached.Genre, director: rawCached.Director, actors: rawCached.Actors,
+        language: rawCached.Language, country: rawCached.Country, awards: rawCached.Awards,
+        status, userRating,
+        season: isSeries ? season : null, episode: isSeries ? episode : null,
+        totalSeasons: isSeries ? rawCached.totalSeasons : null,
+        dateAdded: existingIdx > -1 ? state.items[existingIdx].dateAdded : new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
       };
       if (existingIdx > -1) state.items[existingIdx] = newItem; else state.items.push(newItem);
       saveStateToStorage(); state.selectedId = imdbID; closeModal('addModal'); renderDashboard(); renderGrid(); renderHero(); isSavingItem = false;
@@ -709,7 +852,7 @@
       saveStateToStorage(); renderDashboard(); renderGrid(); renderHero();
     }
 
-    function renderStarsStatic(rating) { let h = ""; for (let i = 1; i <= 5; i++) h += `<span style="color:${i <= rating ? '#ffb020' : '#cbd5e1'};margin-left:1px;">★</span>`; return h; }
+    function renderStarsStatic(rating) { let h = ""; for (let i = 1; i <= 5; i++) h += `<span style="color:${i <= rating ? '#fbbf24' : '#4b5563'};margin-left:2px;">★</span>`; return h; }
     function translateStatus(s) { if (s === "Watching") return "⏳ در حال تماشا"; if (s === "Planned") return "📅 برنامه‌ریزی شده"; if (s === "Completed") return "✅ تمام شده"; return s; }
 
     function extractAndRenderGenres() {
@@ -761,10 +904,10 @@
       const container = document.getElementById("mainGrid");
       if (!container) return;
       const items = getFilteredAndSortedItems();
-      if (items.length === 0) { container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-size:13px;">هیچ عنوانی یافت نشد.</div>`; return; }
+      if (items.length === 0) { container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-secondary);font-size:14px;">هیچ عنوانی یافت نشد.</div>`; return; }
       container.innerHTML = items.map(item => {
         const isSelected = item.id === state.selectedId; const progress = item.type === 'series' ? getProgressPercent(item) : 0;
-        return `<div class="movie-card ${isSelected ? 'selected' : ''}" onclick="selectGridItem('${item.id}')"><div class="card-poster-wrapper"><img src="${item.poster !== 'N/A' ? item.poster : 'https://via.placeholder.com/200x280?text=No+Cover'}" alt=""><div class="card-overlay"><p style="font-size:12px;font-weight:700;">⭐ IMDb: ${item.imdbRating}</p><button class="btn btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="event.stopPropagation();deleteItem('${item.id}')">🗑️ حذف</button></div></div><div class="card-info"><h4 class="card-title" title="${item.title}">${item.title}</h4><div class="card-meta-line"><span>${item.year}</span><span>${translateType(item.type)}</span></div><div style="font-size:11px;margin-top:2px;">امتیاز من: ${renderStarsStatic(item.userRating)}</div>${item.type === 'series' ? `<div class="card-progress">پیشرفت: ${progress}%</div>` : ''}</div></div>`;
+        return `<div class="movie-card ${isSelected ? 'selected' : ''}" onclick="selectGridItem('${item.id}')"><div class="card-poster-wrapper"><img src="${item.poster !== 'N/A' ? item.poster : 'https://via.placeholder.com/200x280?text=No+Cover'}" alt=""><div class="card-overlay"><p style="font-size:13px;font-weight:700;">⭐ IMDb: ${item.imdbRating}</p><button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;" onclick="event.stopPropagation();deleteItem('${item.id}')">🗑️ حذف</button></div></div><div class="card-info"><h4 class="card-title" title="${item.title}">${item.title}</h4><div class="card-meta-line"><span>${item.year}</span><span>${translateType(item.type)}</span></div><div style="font-size:12px;margin-top:4px;">امتیاز من: ${renderStarsStatic(item.userRating)}</div>${item.type === 'series' ? `<div class="card-progress">پیشرفت: ${progress}%</div>` : ''}</div></div>`;
       }).join('');
     }
 
@@ -785,8 +928,8 @@
       const container = document.getElementById("watchNextContainer");
       if (!container) return;
       const top = getTopWatchNext();
-      if (!top) { container.innerHTML = `<p style="color:var(--text-muted);font-size:13px;">لیست تماشای شما خالی است.</p>`; return; }
-      container.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;cursor:pointer;" onclick="selectGridItem('${top.id}')"><div style="display:flex;align-items:center;gap:15px;"><img src="${top.poster !== 'N/A' ? top.poster : 'https://via.placeholder.com/50x70?text=No'}" style="width:36px;height:50px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"><div><h4 style="font-weight:700;font-size:14.5px;">${top.title}</h4><p style="font-size:12px;color:var(--text-muted);margin-top:2px;">وضعیت: ${translateStatus(top.status)} | ⭐ IMDb: ${top.imdbRating}</p></div></div><button class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">🎯 تمرکز روی این عنوان</button></div>`;
+      if (!top) { container.innerHTML = `<p style="color:var(--text-secondary);font-size:14px;">لیست تماشای شما خالی است.</p>`; return; }
+      container.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;cursor:pointer;" onclick="selectGridItem('${top.id}')"><div style="display:flex;align-items:center;gap:16px;"><img src="${top.poster !== 'N/A' ? top.poster : 'https://via.placeholder.com/50x70?text=No'}" style="width:40px;height:55px;object-fit:cover;border-radius:8px;border:1px solid var(--glass-border);"><div><h4 style="font-weight:700;font-size:15px;">${top.title}</h4><p style="font-size:13px;color:var(--text-secondary);margin-top:4px;">وضعیت: ${translateStatus(top.status)} | ⭐ IMDb: ${top.imdbRating}</p></div></div><button class="btn btn-secondary" style="font-size:13px;padding:8px 16px;">🎯 تمرکز روی این عنوان</button></div>`;
     }
 
     // --- AI Helpers (using Groq) ---
@@ -800,67 +943,60 @@
         if (/^none$/i.test(answer) || answer === '') return [];
         const indices = answer.split(/[\s,،]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0 && n < allLinks.length);
         return indices.map(i => allLinks[i]);
-      } catch (e) {
-        console.error("AI link search failed:", e);
-      }
+      } catch (e) { console.error("AI link search failed:", e); }
       return null;
     }
 
+    // --- FIXED ORDER: Stage 1 ID, Stage 2 ID+Title, Stage 3 Title only, Stage 4 AI ---
     async function matchAndExtractLinks(imdbID) {
-  const item = state.items.find(i => i.id === imdbID);
-  const resultsDiv = document.getElementById("archiveMatchResults");
-  if (!resultsDiv) return;
+      const item = state.items.find(i => i.id === imdbID);
+      const resultsDiv = document.getElementById("archiveMatchResults");
+      if (!resultsDiv) return;
 
-  if (!state.archiveHtmlSource) {
-    resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ فایل آرشیو بارگذاری نشده است. در تنظیمات فایل HTML آرشیو را آپلود کنید.</div>`;
-    return;
-  }
+      if (!state.archiveHtmlSource) {
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:14px;color:#ef4444;">⚠️ فایل آرشیو بارگذاری نشده است. در تنظیمات فایل HTML آرشیو را آپلود کنید.</div>`;
+        return;
+      }
 
-  function stageMsg(n, msg) {
-    resultsDiv.innerHTML = `<div class="stage-indicator"><div class="stage-spinner"></div><span>مرحله ${n} از ۴ — ${msg}</span></div>`;
-  }
+      function stageMsg(n, msg) {
+        resultsDiv.innerHTML = `<div class="stage-indicator"><div class="stage-spinner"></div><span>مرحله ${n} از ۴ — ${msg}</span></div>`;
+      }
 
-  const allLinks = getAllArchiveLinks();
-  let matches = [];
+      const allLinks = getAllArchiveLinks();
+      let matches = [];
 
-  // --- Stage 1: IMDb ID only (fastest, most accurate) ---
-  stageMsg('۱', `جستجو با کد IMDb: ${imdbID}`);
-  await tick();
-  matches = searchByImdbId(allLinks, imdbID);
-  if (matches.length > 0) {
-    return renderExtractedLinks(matches, item, resultsDiv, `🆔 یافت‌شده با کد IMDb: <b>${imdbID}</b>`);
-  }
+      // Stage 1: IMDb ID only
+      stageMsg('۱', `جستجو با کد IMDb: ${imdbID}`);
+      await tick();
+      matches = searchByImdbId(allLinks, imdbID);
+      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🆔 یافت‌شده با کد IMDb: <b>${imdbID}</b>`);
 
-  // --- Stage 2: IMDb ID + Title (strict combined) – prevents false positives ---
-  stageMsg('۲', 'جستجوی ترکیبی — تطابق هم‌زمان کد و نام');
-  await tick();
-  matches = searchByBothStrict(allLinks, item.title, imdbID);
-  if (matches.length > 0) {
-    return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 یافت‌شده با تطابق ترکیبی (کد + نام)`);
-  }
+      // Stage 2: Combined (IMDb + Title)
+      stageMsg('۲', 'جستجوی ترکیبی — تطابق هم‌زمان کد و نام');
+      await tick();
+      matches = searchByBothStrict(allLinks, item.title, imdbID);
+      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 یافت‌شده با تطابق ترکیبی (کد + نام)`);
 
-  // --- Stage 3: Title only (wide search, but now only if the two above failed) ---
-  stageMsg('۳', `جستجو با نام دقیق: ${item.title}`);
-  await tick();
-  matches = searchByTitleOnly(allLinks, item.title);
-  if (matches.length > 0) {
-    return renderExtractedLinks(matches, item, resultsDiv, `🔤 یافت‌شده با نام: <b>${item.title}</b>`);
-  }
+      // Stage 3: Title only
+      stageMsg('۳', `جستجو با نام دقیق: ${item.title}`);
+      await tick();
+      matches = searchByTitleOnly(allLinks, item.title);
+      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤 یافت‌شده با نام: <b>${item.title}</b>`);
 
-  // --- Stage 4: AI search (last resort) ---
-  stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با موتور هوشمند ابری...');
-  await tick();
-  const aiResult = await searchWithAI(item, allLinks);
-  if (aiResult === null) {
-    resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ ارتباط با هوش مصنوعی ممکن نیست. مطمئن شوید کلید API معتبر است.</div>`;
-    return;
-  }
-  if (aiResult.length === 0) {
-    resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:13px;color:#b91c1c;">⚠️ هیچ لینکی برای <b>${item.title}</b> در آرشیو یافت نشد. (تمام ۴ مرحله جستجو انجام شد)</div>`;
-    return;
-  }
-  renderExtractedLinks(aiResult, item, resultsDiv, `🤖 یافت‌شده توسط هوش مصنوعی`);
-}
+      // Stage 4: AI
+      stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با موتور هوشمند ابری...');
+      await tick();
+      const aiResult = await searchWithAI(item, allLinks);
+      if (aiResult === null) {
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:14px;color:#ef4444;">⚠️ ارتباط با هوش مصنوعی ممکن نیست.</div>`;
+        return;
+      }
+      if (aiResult.length === 0) {
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:14px;color:#ef4444;">⚠️ هیچ لینکی برای <b>${item.title}</b> یافت نشد.</div>`;
+        return;
+      }
+      renderExtractedLinks(aiResult, item, resultsDiv, `🤖 یافت‌شده توسط هوش مصنوعی`);
+    }
 
     function tick() { return new Promise(r => setTimeout(r, 0)); }
 
@@ -893,7 +1029,7 @@
         else softSubLinks.push(m);
       });
 
-      let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;"><span style="font-size:12px;color:var(--text-muted);background:#f1f5f9;padding:4px 10px;border-radius:8px;border:1px solid var(--border);">${strategyLabel} — ${matches.length} لینک</span></div><div class="quality-section-wrapper">`;
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><span style="font-size:13px;color:var(--text-secondary);background:rgba(255,255,255,0.05);padding:6px 14px;border-radius:20px;border:1px solid var(--glass-border);">${strategyLabel} — ${matches.length} لینک</span></div><div class="quality-section-wrapper">`;
 
       if (!isSeries) {
         if (softSubLinks.length > 0) {
@@ -929,10 +1065,8 @@
           out += `</div>`;
           return out;
         }
-
         html += renderSeriesGroup(softSubLinks, "SoftSub", "softsub");
         html += renderSeriesGroup(dubbedLinks,  "Dubbed",  "dubbed");
-
         if (!softSubLinks.length && !dubbedLinks.length) {
           matches.forEach(m => { html += `<a href="${m.url}" target="_blank" class="movie-quality-line">📥 ${m.text || m.url}</a>`; });
         }
@@ -946,7 +1080,7 @@
       if (SpeechRecognition) {
         recognition = new SpeechRecognition();
         recognition.continuous = false;
-        recognition.lang = 'fa-IR';
+        recognition.lang = 'fa-IR'; // may fallback to browser's default if not supported
         recognition.interimResults = false;
         recognition.onresult = function(event) {
           const textarea = document.getElementById("audioReviewTextarea");
@@ -983,12 +1117,9 @@
     async function translatePlotInline(id) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
-
       const plotEl = document.getElementById(`plot_wrapper_${id}`);
       if (plotEl) plotEl.innerHTML = `<span style="color:var(--cyan); font-weight:600;">⏳ در حال ترجمه داستان به فارسی...</span>`;
-      
-      const sysPrompt = "You are an expert movie translator. Translate the following English movie plot into natural, fluent Persian (Farsi). Output ONLY the translation. Do not use Markdown blocks.";
-      
+      const sysPrompt = "You are an expert movie translator. Translate the following English movie plot into natural, fluent Persian (Farsi). Output ONLY the translation.";
       try {
         const translatedText = await callGroqAPI(sysPrompt, item.plot);
         if (translatedText) {
@@ -996,7 +1127,7 @@
           saveStateToStorage(); renderHero();
         }
       } catch (err) {
-        if (plotEl) plotEl.innerHTML = `<span style="color:red;">خطا: ${err.message}</span>`;
+        if (plotEl) plotEl.innerHTML = `<span style="color:#ef4444;">خطا: ${err.message}</span>`;
       }
     }
 
@@ -1013,17 +1144,16 @@
     function openManageProgressModal(id) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
-
       const backdrop  = document.getElementById("progressModal");
       const container = document.getElementById("progressModalContent");
       container.innerHTML = `
         <input type="hidden" id="progressManageId" value="${item.id}">
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px;">* نیازی به وارد کردن اطلاعات تمامی فصول نیست. برنامه به صورت هوشمند پیشرفت شما را محاسبه می‌کند.</p>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:18px;">* نیازی به وارد کردن اطلاعات تمامی فصول نیست.</p>
         <div class="form-row">
-          <div class="form-group"><label>در حال تماشای کدام فصل هستید؟</label><input type="number" id="progressManageSeason" class="form-control" value="${item.season || 1}" min="1" max="${item.totalSeasons || 50}"></div>
-          <div class="form-group"><label>کدام قسمت؟</label><input type="number" id="progressManageEpisode" class="form-control" value="${item.episode || 1}" min="1"></div>
+          <div class="form-group"><label>فصل جاری:</label><input type="number" id="progressManageSeason" class="form-control" value="${item.season || 1}" min="1" max="${item.totalSeasons || 50}"></div>
+          <div class="form-group"><label>قسمت جاری:</label><input type="number" id="progressManageEpisode" class="form-control" value="${item.episode || 1}" min="1"></div>
         </div>
-        <button class="btn" style="width:100%; margin-top:15px;" onclick="saveQuickProgress()">⚡ اعمال تغییرات وضعیت</button>
+        <button class="btn" style="width:100%; margin-top:18px;" onclick="saveQuickProgress()">⚡ اعمال تغییرات</button>
       `;
       backdrop.classList.add("active");
     }
@@ -1032,8 +1162,14 @@
       const id   = document.getElementById("progressManageId").value;
       const item = state.items.find(i => i.id === id);
       if (!item) return;
-      item.season      = parseInt(document.getElementById("progressManageSeason").value)  || 1;
-      item.episode     = parseInt(document.getElementById("progressManageEpisode").value) || 1;
+      let season  = parseInt(document.getElementById("progressManageSeason").value)  || 1;
+      let episode = parseInt(document.getElementById("progressManageEpisode").value) || 1;
+      const totalSeasons = parseInt(item.totalSeasons) || 1;
+      if (season < 1) season = 1;
+      if (season > totalSeasons) season = totalSeasons;
+      if (episode < 1) episode = 1;
+      item.season      = season;
+      item.episode     = episode;
       item.lastUpdated = new Date().toISOString();
       saveStateToStorage(); closeModal("progressModal"); renderHero(); renderGrid();
     }
@@ -1043,66 +1179,55 @@
       if (!state.selectedId || state.items.length === 0) {
         const nextUp = getTopWatchNext();
         if (nextUp) { state.selectedId = nextUp.id; }
-        else { container.innerHTML = `<div class="hero-empty"><span style="font-size:36px;">🎬</span><p>فیلم یا سریالی را جستجو و انتخاب کنید.</p></div>`; return; }
+        else { container.innerHTML = `<div class="hero-empty"><span style="font-size:42px;">🎬</span><p>فیلم یا سریالی را جستجو و انتخاب کنید.</p></div>`; return; }
       }
-
       const item = state.items.find(i => i.id === state.selectedId);
       if (!item) return;
-
       const isSeries      = item.type === 'series';
       const progressPct   = getProgressPercent(item);
       const savedReview   = state.audioReviews[item.id] || "";
-
       let displayPlot = item.plot;
       if (state.uiLanguage === 'fa') {
         if (item.plotFa) displayPlot = item.plotFa;
-        else displayPlot = `<div id="plot_wrapper_${item.id}"><span style="color:var(--text-muted);font-size:13px;display:block;margin-bottom:8px;">خلاصه داستان به زبان فارسی تولید نشده است.</span><button class="btn btn-secondary" style="padding:4px 10px;font-size:11px;" onclick="translatePlotInline('${item.id}')">✨ ترجمه خلاصه داستان به فارسی با AI</button></div>`;
+        else displayPlot = `<div id="plot_wrapper_${item.id}"><span style="color:var(--text-secondary);font-size:14px;display:block;margin-bottom:10px;">خلاصه داستان به فارسی موجود نیست.</span><button class="btn btn-secondary" onclick="translatePlotInline('${item.id}')">✨ ترجمه با AI</button></div>`;
       }
-
       container.innerHTML = `
         <div class="hero-content">
-          <img src="${item.poster !== 'N/A' ? item.poster : 'https://via.placeholder.com/220x320?text=No+Cover'}" class="hero-poster">
+          <img src="${item.poster !== 'N/A' ? item.poster : 'https://via.placeholder.com/240x340?text=No+Cover'}" class="hero-poster">
           <div class="hero-details">
             <h2 class="hero-title">${item.title}</h2>
             <div class="hero-meta">
               <span class="badge badge-status">${translateStatus(item.status)}</span>
               <span class="badge">IMDb ${item.imdbRating || 'N/A'}</span>
-              <span class="badge">سال: ${item.year || 'N/A'}</span>
+              <span class="badge">${item.year || 'N/A'}</span>
               <span class="badge">امتیاز شما: ${renderStarsStatic(item.userRating)}</span>
             </div>
-
             <div class="hero-extended-info">
               <div class="extended-row"><strong>🎬 کارگردان:</strong> ${item.director || 'نامشخص'}</div>
               <div class="extended-row"><strong>🎭 ستارگان:</strong> ${item.actors || 'نامشخص'}</div>
-              <div class="extended-row"><strong>🌍 کشور / زبان:</strong> ${item.country || 'نامشخص'} / ${item.language || 'نامشخص'}</div>
+              <div class="extended-row"><strong>🌍 کشور/زبان:</strong> ${item.country || '?'} / ${item.language || '?'}</div>
               <div class="extended-row"><strong>🏆 جوایز:</strong> ${item.awards || 'بدون ثبت'}</div>
-              <div class="extended-row"><strong>🆔 IMDb ID:</strong> <span style="font-family:monospace;font-size:12px;background:#f1f5f9;padding:2px 7px;border-radius:6px;border:1px solid var(--border);color:var(--cyan);font-weight:700;">${item.id}</span></div>
+              <div class="extended-row"><strong>🆔 IMDb ID:</strong> <span style="font-family:monospace;font-size:13px;background:rgba(255,255,255,0.05);padding:4px 10px;border-radius:8px;border:1px solid var(--glass-border);color:var(--cyan);">${item.id}</span></div>
             </div>
-
             <div class="hero-plot">${displayPlot}</div>
-
-            ${isSeries ? `<div class="episode-progress-block"><div class="episode-progress-header"><span class="episode-progress-title">🍿 پیشرفت تماشای سریال (کل فصل‌ها: ${item.totalSeasons || '?'})</span><span class="episode-progress-count">فصل ${item.season}، قسمت ${item.episode}</span></div><div class="progress-container"><div class="progress-bar" style="width:${progressPct}%"></div></div><div style="text-align:left;font-size:11px;color:var(--text-muted);margin-top:5px;font-weight:bold;">${progressPct}% تکمیل شده</div></div>` : ''}
-
-            <div id="archiveMatchResults" style="margin-top:15px;margin-bottom:15px;"></div>
-            <div id="aiSimilarRecommendations" style="margin-top:15px;margin-bottom:15px;background:#f0f9ff;border:1px dashed #bae6fd;padding:16px;border-radius:12px;display:none;color:var(--text-main);"></div>
-
+            ${isSeries ? `<div class="episode-progress-block"><div class="episode-progress-header"><span class="episode-progress-title">🍿 پیشرفت تماشا (فصل‌ها: ${item.totalSeasons || '?'})</span><span class="episode-progress-count">فصل ${item.season}، قسمت ${item.episode}</span></div><div class="progress-container"><div class="progress-bar" style="width:${progressPct}%"></div></div><div style="text-align:left;font-size:12px;color:var(--text-secondary);margin-top:6px;">${progressPct}% تکمیل</div></div>` : ''}
+            <div id="archiveMatchResults" style="margin-top:20px;margin-bottom:20px;"></div>
+            <div id="aiSimilarRecommendations" style="margin-top:20px;margin-bottom:20px;background:rgba(96,165,250,0.05);border:1px dashed rgba(96,165,250,0.3);padding:18px;border-radius:12px;display:none;"></div>
             <div class="audio-review-block">
               <div class="audio-controls">
-                <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">✍️</span><div><h4 style="font-size:13px;font-weight:800;color:var(--text-main);margin:0;">نقد و نظر شخصی</h4><p style="font-size:11px;color:var(--text-muted);margin:0;">دیدگاه خود را بنویسید یا ضبط کنید</p></div></div>
+                <div><h4 style="font-size:14px;">✍️ نقد و نظر شخصی</h4></div>
                 <button id="voiceRecBtn" class="voice-rec-btn" onclick="toggleVoiceInput()">🎙️ ضبط صدا</button>
               </div>
-              <textarea id="audioReviewTextarea" class="review-textarea" placeholder="نقد، یادداشت یا احساستان درباره این اثر را بنویسید..." oninput="saveAudioReview('${item.id}', this.value)">${savedReview}</textarea>
+              <textarea id="audioReviewTextarea" class="review-textarea" placeholder="نقد یا یادداشت خود را بنویسید..." oninput="saveAudioReview('${item.id}', this.value)">${savedReview}</textarea>
             </div>
-
             <div class="hero-actions">
               <button class="btn btn-stream" onclick="matchAndExtractLinks('${item.id}')">🔍 استخراج لینک‌ها</button>
               <button class="btn btn-stream-next" onclick="generateSimilarRecommendations('${item.id}')">🤖 پیشنهاد مشابه AI</button>
               ${isSeries ? `<button class="btn btn-secondary" onclick="openManageProgressModal('${item.id}')">⚙️ تغییر قسمت</button>` : ''}
-              <button class="btn btn-secondary btn-delete" onclick="deleteItem('${item.id}')">🗑️ حذف</button>
+              <button class="btn btn-delete" onclick="deleteItem('${item.id}')">🗑️ حذف</button>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
     function renderDashboard() {
@@ -1111,44 +1236,38 @@
       const total     = state.items.length;
       const watching  = state.items.filter(i => i.status === "Watching").length;
       const completed = state.items.filter(i => i.status === "Completed").length;
-
       let totalImdb = 0, imdbCount = 0;
       state.items.forEach(i => { let p = parseFloat(i.imdbRating); if (!isNaN(p)) { totalImdb += p; imdbCount++; } });
       const imdbAvg = imdbCount > 0 ? (totalImdb / imdbCount).toFixed(1) : "0.0";
-
       let totalUR = 0, urCount = 0;
       state.items.forEach(i => { if (i.userRating > 0) { totalUR += i.userRating; urCount++; } });
       const userAvg = urCount > 0 ? (totalUR / urCount).toFixed(1) : "0.0";
-
       let genreFreq = {};
       state.items.forEach(i => { if (i.genre && i.genre !== "N/A") i.genre.split(",").forEach(g => { let cg = g.trim(); genreFreq[cg] = (genreFreq[cg] || 0) + 1; }); });
       let favoriteGenre = "نامشخص", maxCount = 0;
       for (let g in genreFreq) { if (genreFreq[g] > maxCount) { maxCount = genreFreq[g]; favoriteGenre = g; } }
-
-      container.innerHTML = `<div class="stat-card"><h3>${total}</h3><p>کل عناوین</p></div><div class="stat-card"><h3>${watching}</h3><p>⏳ در حال تماشا</p></div><div class="stat-card"><h3>${completed}</h3><p>✅ تمام شده</p></div><div class="stat-card"><h3>⭐ ${imdbAvg}</h3><p>میانگین کل IMDb</p></div><div class="stat-card"><h3>★ ${userAvg}</h3><p>میانگین امتیازهای من</p></div><div class="stat-card"><h3 style="font-size:15px;font-weight:800;padding-top:6px;color:var(--cyan);">${favoriteGenre}</h3><p>🎭 ژانر محبوب</p></div>`;
+      container.innerHTML = `
+        <div class="stat-card"><h3>${total}</h3><p>کل عناوین</p></div>
+        <div class="stat-card"><h3>${watching}</h3><p>⏳ در حال تماشا</p></div>
+        <div class="stat-card"><h3>${completed}</h3><p>✅ تمام شده</p></div>
+        <div class="stat-card"><h3>⭐ ${imdbAvg}</h3><p>میانگین IMDb</p></div>
+        <div class="stat-card"><h3>★ ${userAvg}</h3><p>میانگین امتیازهای من</p></div>
+        <div class="stat-card"><h3 style="font-size:16px;color:var(--cyan);">${favoriteGenre}</h3><p>🎭 ژانر محبوب</p></div>`;
     }
 
     async function generateSimilarRecommendations(id) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
-
       const responseBox = document.getElementById("aiSimilarRecommendations"); if (!responseBox) return;
       responseBox.style.display = "block";
-      responseBox.innerHTML = `<span style="color:var(--cyan);font-weight:600;">⏳ در حال تحلیل هوشمند عناوین مشابه...</span>`;
-      
-      const sysPrompt = `You are CineTrack AI Assistant. Recommend 5 movies or TV shows closely similar to the user's selected title. SPEAK STRICTLY IN PERSIAN (FARSI). Do not use English text. Feel free to format your response beautifully with emojis and short bullet points to make it readable.`;
+      responseBox.innerHTML = `<span style="color:var(--cyan);">⏳ در حال تحلیل...</span>`;
+      const sysPrompt = `You are CineTrack AI Assistant. Recommend 5 movies or TV shows closely similar to the user's selected title. SPEAK STRICTLY IN PERSIAN (FARSI). Do not use English text. Use emojis and bullet points.`;
       const userText = `Title: "${item.title}". Type: ${item.type}. Genre: ${item.genre}. Plot: ${item.plot}. Give 5 recommendations.`;
-      
       try {
         const analysis = await callGroqAPI(sysPrompt, userText);
-        responseBox.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:6px;">
-            <h4 style="font-size:13.5px;font-weight:800;color:var(--text-main);">🤖 عناوین مشابه (تحلیل AI)</h4>
-            <button class="btn btn-secondary" style="padding:2px 6px;font-size:10px;" onclick="document.getElementById('aiSimilarRecommendations').style.display='none'">✖</button>
-          </div>
-          <div style="font-size:13px;line-height:1.75;white-space:pre-wrap;">${analysis}</div>`;
+        responseBox.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h4 style="font-size:15px;font-weight:800;">🤖 عناوین مشابه (تحلیل AI)</h4><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="document.getElementById('aiSimilarRecommendations').style.display='none'">✖</button></div><div style="font-size:14px;line-height:1.9;white-space:pre-wrap;">${sanitizeAIResponse(analysis)}</div>`;
       } catch (err) {
-        responseBox.innerHTML = `<span style="color:red;">خطا: ${err.message}</span>`;
+        responseBox.innerHTML = `<span style="color:#ef4444;">خطا: ${err.message}</span>`;
       }
     }
 
@@ -1160,17 +1279,15 @@
       const btn         = document.querySelector(".ai-global-panel .btn");
       const responseBox = document.getElementById("globalAiResponse");
       btn.disabled = true;
-      responseBox.innerText = "⏳ در حال آنالیز آماری آرشیو. لطفاً صبور باشید...";
-      
+      responseBox.innerText = "⏳ در حال آنالیز آماری آرشیو...";
       const safeData = state.items.map(i => ({ title: i.title, type: i.type, genre: i.genre, rating: i.imdbRating }));
-      
-      const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. Give highly personalized structural feedback STRICTLY IN PERSIAN (FARSI). NEVER write in English. Highlight patterns in their taste, note their favorite genres based on the data, and kindly suggest a few masterpiece titles they are missing. Use beautiful formatting with emojis so it looks great on a webpage.`;
-      
+      const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. Give highly personalized structural feedback STRICTLY IN PERSIAN (FARSI). NEVER write in English. Highlight patterns, favorite genres, and suggest missing masterpieces. Use beautiful formatting with emojis.`;
       try {
         const analysis = await callGroqAPI(sysPrompt, JSON.stringify(safeData));
-        state.globalAiCache = analysis;
-        localStorage.setItem("cinetrack_global_ai_cache", analysis);
-        responseBox.innerHTML = analysis;
+        const sanitized = sanitizeAIResponse(analysis); // store sanitized version
+        state.globalAiCache = sanitized;
+        localStorage.setItem("cinetrack_global_ai_cache", sanitized);
+        responseBox.innerHTML = sanitized;
         document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
       } catch (err) {
         responseBox.innerText = `خطا: ${err.message}`;
@@ -1188,7 +1305,7 @@
       const file = event.target.files[0]; if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
-        try { const parsed = JSON.parse(e.target.result); if (Array.isArray(parsed)) { state.items = parsed; saveStateToStorage(); init(); alert("تکمیل شد."); } } catch (err) { alert("فایل نامعتبر است."); }
+        try { const parsed = JSON.parse(e.target.result); if (Array.isArray(parsed)) { state.items = parsed; saveStateToStorage(); init(); alert("بکاپ با موفقیت بارگذاری شد."); } } catch (err) { alert("فایل نامعتبر."); }
       };
       reader.readAsText(file);
     }
