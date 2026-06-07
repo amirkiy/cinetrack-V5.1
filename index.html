@@ -561,9 +561,9 @@
         });
         } catch (e) {
     console.error("IndexedDB Save Error:", e);
-    throw e;   // <-- add this line
+    throw e;
   }
-
+}
     async function loadArchiveFromDB() {
       try {
         const db = await initDB();
@@ -604,6 +604,9 @@
     let searchAbortController = null;
 
     // ==================== UTILS ====================
+    function openSettingsModal() {
+  document.getElementById("settingsModal").classList.add("active");
+}
     function sanitizeAIResponse(text) {
       if (!text) return "";
       return text
@@ -748,13 +751,41 @@
       currentSearchResults = [];
       if (searchAbortController) searchAbortController.abort();
     }
-    
+    function exportLibrary() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.items, null, 2));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute("href", dataStr);
+  dlAnchor.setAttribute("download", `cinetrack_library.json`);
+  document.body.appendChild(dlAnchor);
+  dlAnchor.click();
+  dlAnchor.remove();
+}
+
+function importLibrary(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (Array.isArray(parsed)) {
+        state.items = parsed;
+        saveStateToStorage();
+        init();
+        alert("بکاپ بارگذاری شد.");
+      }
+    } catch (err) { alert("فایل نامعتبر است."); }
+  };
+  reader.readAsText(file);
+}
     function translateType(type) { 
       if (type === "movie") return "فیلم سینمایی"; 
       if (type === "series") return "سریال تلویزیونی"; 
       return type; 
     }
-
+function saveGeneralNotes(v) {
+  localStorage.setItem("cinetrack_general_notes", v);
+}
     async function fetchItemFullDetails(imdbID) {
       document.getElementById("searchDropdown").style.display = "none";
       let movieData;
@@ -1005,11 +1036,6 @@
     }
 
     async function searchWithAI(item, allLinks) {
-      // ... same ...
-    }
-    // (Full implementation omitted for brevity – it's in the previous full code)
-    // I'll include a placeholder; you can copy the full version from above.
-    async function searchWithAI(item, allLinks) {
       const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
       const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title.`;
       const userText = `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`;
@@ -1023,10 +1049,6 @@
       return null;
     }
 
-    async function matchAndExtractLinks(imdbID) {
-      // ... same 4-stage logic ...
-    }
-    // Placeholder - copy from previous version.
     async function matchAndExtractLinks(imdbID) {
       const item = state.items.find(i => i.id === imdbID);
       const resultsDiv = document.getElementById("archiveMatchResults");
@@ -1099,12 +1121,67 @@
   };
   reader.readAsText(file);
 }
+function openManageProgressModal(id) {
+  const item = state.items.find(i => i.id === id);
+  if (!item) return;
 
+  const backdrop  = document.getElementById("progressModal");
+  const container = document.getElementById("progressModalContent");
+  container.innerHTML = `
+    <input type="hidden" id="progressManageId" value="${item.id}">
+    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:18px;">* نیازی به وارد کردن اطلاعات تمامی فصول نیست. برنامه به صورت هوشمند پیشرفت شما را محاسبه می‌کند.</p>
+    <div class="form-row">
+      <div class="form-group"><label>فصل جاری:</label><input type="number" id="progressManageSeason" class="form-control" value="${item.season || 1}" min="1" max="${item.totalSeasons || 50}"></div>
+      <div class="form-group"><label>قسمت جاری:</label><input type="number" id="progressManageEpisode" class="form-control" value="${item.episode || 1}" min="1"></div>
+    </div>
+    <button class="btn" style="width:100%; margin-top:18px;" onclick="saveQuickProgress()">⚡ اعمال تغییرات</button>
+  `;
+  backdrop.classList.add("active");
+}
+
+function saveQuickProgress() {
+  const id = document.getElementById("progressManageId").value;
+  const item = state.items.find(i => i.id === id);
+  if (!item) return;
+  let season  = parseInt(document.getElementById("progressManageSeason").value)  || 1;
+  let episode = parseInt(document.getElementById("progressManageEpisode").value) || 1;
+  const totalSeasons = parseInt(item.totalSeasons) || 1;
+  if (season < 1) season = 1;
+  if (season > totalSeasons) season = totalSeasons;
+  if (episode < 1) episode = 1;
+  item.season      = season;
+  item.episode     = episode;
+  item.lastUpdated = new Date().toISOString();
+  saveStateToStorage();
+  closeModal("progressModal");
+  renderHero();
+  renderGrid();
+}
     // ==================== SAVE SETTINGS (no change) ====================
     // ... etc.
 
     // I'll stop here and provide the conclusion.
     // The full corrected code should be a complete HTML file.
+      async function init() {
+  state.archiveHtmlSource = await loadArchiveFromDB();
+  renderDashboard();
+  extractAndRenderGenres();
+  renderGrid();
+  renderHero();
+  setupFilterButtonsUI();
+  renderWatchNext();
+  initSpeechRecognition();
+
+  document.getElementById("uiLanguageSetting").value = state.uiLanguage;
+  if (state.archiveHtmlSource) {
+    document.getElementById("archiveUploadStatus").innerText = "✅ فایل آرشیو بارگذاری شد.";
+  }
+  document.getElementById("generalNotesTextArea").value = localStorage.getItem("cinetrack_general_notes") || "";
+  if (state.globalAiCache) {
+    document.getElementById("globalAiResponse").innerHTML = state.globalAiCache;
+    document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
+  }
+}
   </script>
 </body>
 </html>
