@@ -30,7 +30,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; transition: all 0.2s ease; }
     body { background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; padding-bottom: 60px; }
 
-    /* glassmorphism utility */
     .glass {
       background: var(--glass);
       backdrop-filter: blur(16px);
@@ -400,7 +399,7 @@
   <div class="modal-backdrop" id="addModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 id="modalMetaTitle" style="font-size:18px; font-weight:800;">اضافه کردن به آرشیو</h3>
+        <h3 style="font-size:18px; font-weight:800;">اضافه کردن به آرشیو</h3>
         <button class="btn btn-secondary" style="padding:4px 10px;" onclick="closeModal('addModal')">✖</button>
       </div>
       <div id="addModalContent"></div>
@@ -424,7 +423,7 @@
         <button class="btn btn-secondary" style="padding:4px 10px;" onclick="closeModal('notesModal')">✖</button>
       </div>
       <div class="form-group">
-        <label>متن یادداشت‌ها، لیست فیلم‌های آینده یا برنامه تماشا:</label>
+        <label>متن یادداشت‌ها:</label>
         <textarea id="generalNotesTextArea" class="form-control" style="min-height: 250px; resize: vertical;" oninput="saveGeneralNotes(this.value)"></textarea>
       </div>
     </div>
@@ -433,22 +432,22 @@
   <div class="modal-backdrop" id="settingsModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="font-size:18px; font-weight:800;">تنظیمات هوش مصنوعی و سورس آرشیو</h3>
+        <h3 style="font-size:18px; font-weight:800;">تنظیمات سیستم</h3>
         <button class="btn btn-secondary" style="padding:4px 10px;" onclick="closeModal('settingsModal')">✖</button>
       </div>
       <div class="form-group">
         <label>زبان پیش‌فرض نمایش داستان:</label>
         <select id="uiLanguageSetting" class="form-control">
-          <option value="en">English (نمایش خلاصه اصلی انگلیسی)</option>
-          <option value="fa">Persian / فارسی (ترجمه خودکار هوش مصنوعی)</option>
+          <option value="en">English</option>
+          <option value="fa">فارسی (ترجمه AI)</option>
         </select>
       </div>
       <div style="border-top: 1px solid var(--glass-border); margin: 24px 0 16px; padding-top: 18px;">
-        <p style="font-size: 14px; color: var(--cyan); margin-bottom: 14px; font-weight:bold;">📥 بارگذاری فایل متنی / سورس آرشیو (ذخیره آفلاین ابدی)</p>
+        <p style="font-size: 14px; color: var(--cyan); margin-bottom: 14px; font-weight:bold;">📥 بارگذاری فایل آرشیو</p>
         <div class="form-group">
-          <label>فایل HTML دانلود شده از صفحه آرشیو را انتخاب کنید:</label>
+          <label>فایل HTML آرشیو:</label>
           <input type="file" id="archiveHtmlFileInput" class="form-control" accept=".html,.htm" onchange="handleArchiveHtmlUpload(event)">
-          <div id="archiveUploadStatus" style="font-size: 12px; color: #fbbf24; margin-top: 10px; font-weight: bold;"></div>
+          <div id="archiveUploadStatus" style="font-size:12px; color:#fbbf24; margin-top:10px;"></div>
         </div>
       </div>
       <button class="btn" style="width:100%; margin-top:10px;" onclick="saveSettings()">ذخیره تنظیمات</button>
@@ -456,11 +455,18 @@
   </div>
 
   <script>
-    // --- API Keys ---
-    const OMDB_KEY = "4b0254f3";
-    const GROQ_API_KEY = "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"; // 🔑 Replace with your actual key
+    // ==================== API CONFIGURATION ====================
+    const OMDB_KEY = "4b0254f3";  // OMDb API key
 
-    // --- IndexedDB ---
+    // 🧠 AI Configuration – Use AvalAI (or any OpenAI-compatible API)
+    // 1. Get your API key from avalai.ir (or your provider)
+    // 2. Set the base URL (usually https://api.avalai.ir/v1)
+    // 3. Choose a model (e.g., gpt-3.5-turbo, gpt-4, or a Persian model)
+    const AI_API_BASE = "https://api.avalai.ir/v1";   // <-- CHANGE TO YOUR AVALAI ENDPOINT
+    const AI_API_KEY  = "aa-Guxnyo16ZkqRGPoFYUC5gD4JCs1BKPXyiL1BFEeAluA2guzl";   // <-- REPLACE WITH YOUR KEY
+    const AI_MODEL    = "gpt-5.4-mini";              // <-- MODEL NAME FROM AVALAI
+
+    // ==================== IndexedDB ====================
     const DB_NAME = 'CineTrackDB';
     const DB_VERSION = 1;
     const STORE_NAME = 'archives';
@@ -503,7 +509,7 @@
       } catch (e) { console.error("IndexedDB Load Error:", e); return ""; }
     }
 
-    // --- Global State ---
+    // ==================== GLOBAL STATE ====================
     let state = {
       items: JSON.parse(localStorage.getItem("cinetrack_ultimate_db") || "[]"),
       selectedId: null,
@@ -523,9 +529,9 @@
     let currentSearchPage = 1;
     let currentSearchResults = [];
     let isLoadingMore = false;
-    let searchAbortController = null;   // for cancelling previous search requests
+    let searchAbortController = null;
 
-    // --- Helper: Sanitize AI responses (escape HTML but preserve newlines) ---
+    // ==================== UTILS ====================
     function sanitizeAIResponse(text) {
       if (!text) return "";
       return text
@@ -537,93 +543,16 @@
         .replace(/\n/g, "<br>");
     }
 
-    // --- Initialize ---
-    async function init() {
-      state.archiveHtmlSource = await loadArchiveFromDB();
-      renderDashboard(); extractAndRenderGenres(); renderGrid(); renderHero();
-      setupFilterButtonsUI(); renderWatchNext(); initSpeechRecognition();
-
-      document.getElementById("uiLanguageSetting").value = state.uiLanguage;
-      if (state.archiveHtmlSource) {
-        document.getElementById("archiveUploadStatus").innerText = "✅ فایل آرشیو با موفقیت بارگذاری شد.";
+    // ==================== AVALAI (OPENAI-COMPATIBLE) API CALL ====================
+    async function callAIAPI(systemPrompt, userText) {
+      const key = AI_API_KEY.trim();
+      const baseUrl = AI_API_BASE.replace(/\/+$/, ""); // remove trailing slashes
+      if (!key || key === "your-avalai-api-key-here") {
+        throw new Error("⚠️ لطفاً کلید API آوالای (AvalAI) را در متغیر AI_API_KEY تنظیم کنید.");
       }
-      document.getElementById("generalNotesTextArea").value = localStorage.getItem("cinetrack_general_notes") || "";
-      if (state.globalAiCache) {
-        document.getElementById("globalAiResponse").innerHTML = state.globalAiCache; // already sanitized on storage? We'll store raw but display sanitized. Actually we'll sanitize before storing.
-        document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
-      }
-    }
-
-    function saveStateToStorage() {
-      localStorage.setItem("cinetrack_ultimate_db", JSON.stringify(state.items));
-      renderDashboard(); extractAndRenderGenres(); renderWatchNext();
-    }
-
-    function handleArchiveHtmlUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async function(e) {
-        const rawText = e.target.result;
-        state.archiveHtmlSource = rawText;
-        await saveArchiveToDB(rawText);
-        document.getElementById("archiveUploadStatus").innerText = "✅ فایل بارگذاری و ذخیره شد: " + file.name;
-        alert("سورس آرشیو با موفقیت ذخیره شد.");
-        if (state.selectedId) renderHero();
-      };
-      reader.readAsText(file);
-    }
-
-    function getAllArchiveLinks() {
-      if (!state.archiveHtmlSource) return [];
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(state.archiveHtmlSource, 'text/html');
-      return Array.from(doc.getElementsByTagName('a')).map(link => ({
-        text: (link.innerText || link.textContent || '').trim(),
-        url: link.getAttribute('href') || ''
-      })).filter(l => l.url && l.url.length > 5);
-    }
-
-    function buildTitleRegex(title) {
-      const cleaned = title.toLowerCase().replace(/[''':!?,.()\[\]]/g, '').replace(/\s+/g, ' ').trim();
-      const words = cleaned.split(' ').filter(w => w.length > 0);
-      const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-      const pattern = escaped.join('[-_.\\s]');
-      const rightBoundary = '(?=[/_.\\s]|$|\\d|(?=-(?:s\\d{1,2}e?\\d*|\\d{4}|ep\\d|season\\d)))';
-      return new RegExp('(?:^|[/_.\\s])' + pattern + rightBoundary, 'i');
-    }
-
-    function searchByImdbId(allLinks, imdbID) {
-      const id = imdbID.toLowerCase();
-      return allLinks.filter(l => l.url.toLowerCase().includes(id) || l.text.toLowerCase().includes(id));
-    }
-
-    function searchByTitleOnly(allLinks, title) {
-      const rx = buildTitleRegex(title);
-      return allLinks.filter(l => rx.test(l.url) || rx.test(l.text));
-    }
-
-    function searchByBothStrict(allLinks, title, imdbID) {
-      const id  = imdbID.toLowerCase();
-      const rx  = buildTitleRegex(title);
-      return allLinks.filter(l => {
-        const urlLow  = l.url.toLowerCase();
-        const textLow = l.text.toLowerCase();
-        const hasId = urlLow.includes(id) || textLow.includes(id);
-        const hasTitle = rx.test(l.url) || rx.test(l.text);
-        return hasId && hasTitle;
-      });
-    }
-
-    // --- Groq API Engine ---
-    async function callGroqAPI(systemPrompt, userText) {
-      let key = GROQ_API_KEY.trim();
-      if (!key || key === "YOUR_GROQ_API_KEY_HERE") {
-        throw new Error("⚠️ کلید API گراک تنظیم نشده است.");
-      }
-      const url = `https://api.groq.com/openai/v1/chat/completions`;
+      const url = `${baseUrl}/chat/completions`;
       const payload = {
-        model: "llama-3.3-70b-versatile",
+        model: AI_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userText }
@@ -632,17 +561,23 @@
       };
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${key}`
+        },
         body: JSON.stringify(payload)
       });
       if (res.status === 401) throw new Error("❌ کلید API نامعتبر است.");
-      if (!res.ok) { const errText = await res.text(); throw new Error(`خطای HTTP ${res.status}: ${errText.slice(0,100)}`); }
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`خطای HTTP ${res.status}: ${errText.slice(0,100)}`);
+      }
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
       return data.choices[0].message.content;
     }
 
-    // --- OMDB search with abort controller ---
+    // ==================== OMDB SEARCH (with abort) ====================
     async function performSearch(query, page = 1, signal) {
       try {
         const res = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&s=${encodeURIComponent(query)}&page=${page}`, { signal });
@@ -660,7 +595,6 @@
 
     async function handleSearch(query) {
       clearTimeout(searchDebounceTimer);
-      // Cancel any ongoing search
       if (searchAbortController) searchAbortController.abort();
       const dropdown = document.getElementById("searchDropdown");
       if (!query || query.trim().length < 2) { 
@@ -670,7 +604,6 @@
         currentSearchPage = 1;
         return; 
       }
-
       currentSearchQuery = query.trim();
       currentSearchPage = 1;
       currentSearchResults = [];
@@ -680,16 +613,11 @@
       searchDebounceTimer = setTimeout(async () => {
         dropdown.style.display = "block";
         dropdown.innerHTML = `<div style="padding:15px;text-align:center;color:var(--text-secondary);">🔍 در حال جستجو...</div>`;
-        
         const firstPage = await performSearch(currentSearchQuery, 1, signal);
         if (signal.aborted) return;
         currentSearchResults = firstPage.results;
-        let totalLoaded = currentSearchResults.length;
         const hasMore = firstPage.totalResults > 10;
-        
         renderSearchDropdown(currentSearchResults, hasMore, 1, firstPage.totalResults);
-        
-        // Automatically fetch pages 2 and 3, updating currentSearchPage
         if (hasMore && currentSearchResults.length < 30) {
           for (let p = 2; p <= 3; p++) {
             if (signal.aborted) break;
@@ -699,7 +627,7 @@
               const existingIds = new Set(currentSearchResults.map(r => r.imdbID));
               const newResults = nextPage.results.filter(r => !existingIds.has(r.imdbID));
               currentSearchResults.push(...newResults);
-              currentSearchPage = p; // update so load more starts at next page
+              currentSearchPage = p;
               renderSearchDropdown(currentSearchResults, true, p, firstPage.totalResults);
             } else break;
           }
@@ -719,7 +647,6 @@
           <div class="info"><h4>${item.Title}</h4><p>${item.Year} • [${translateType(item.Type)}]</p></div>
         </div>
       `).join('');
-      
       if (hasMore) {
         html += `<div class="load-more-btn" onclick="loadMoreSearchResults(event)">➕ بیشتر (${results.length} از ${totalResults} عنوان) ...</div>`;
       }
@@ -730,9 +657,7 @@
       if (event) event.stopPropagation();
       if (isLoadingMore) return;
       isLoadingMore = true;
-      const dropdown = document.getElementById("searchDropdown");
       const nextPage = currentSearchPage + 1;
-      // Use same abort controller? Better not. We'll create a new one.
       const more = await performSearch(currentSearchQuery, nextPage);
       if (more.results.length) {
         const existingIds = new Set(currentSearchResults.map(r => r.imdbID));
@@ -823,7 +748,6 @@
       if (isSeries && status !== "Completed") { 
         season = parseInt(document.getElementById("formSeason").value) || 1; 
         episode = parseInt(document.getElementById("formEpisode").value) || 1; 
-        // basic validation: season cannot exceed totalSeasons
         const totalSeasons = parseInt(rawCached.totalSeasons) || 1;
         if (season < 1) season = 1;
         if (season > totalSeasons) season = totalSeasons;
@@ -932,13 +856,55 @@
       container.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;cursor:pointer;" onclick="selectGridItem('${top.id}')"><div style="display:flex;align-items:center;gap:16px;"><img src="${top.poster !== 'N/A' ? top.poster : 'https://via.placeholder.com/50x70?text=No'}" style="width:40px;height:55px;object-fit:cover;border-radius:8px;border:1px solid var(--glass-border);"><div><h4 style="font-weight:700;font-size:15px;">${top.title}</h4><p style="font-size:13px;color:var(--text-secondary);margin-top:4px;">وضعیت: ${translateStatus(top.status)} | ⭐ IMDb: ${top.imdbRating}</p></div></div><button class="btn btn-secondary" style="font-size:13px;padding:8px 16px;">🎯 تمرکز روی این عنوان</button></div>`;
     }
 
-    // --- AI Helpers (using Groq) ---
+    // ==================== ARCHIVE LINK SEARCH FUNCTIONS ====================
+    function getAllArchiveLinks() {
+      if (!state.archiveHtmlSource) return [];
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(state.archiveHtmlSource, 'text/html');
+      return Array.from(doc.getElementsByTagName('a')).map(link => ({
+        text: (link.innerText || link.textContent || '').trim(),
+        url: link.getAttribute('href') || ''
+      })).filter(l => l.url && l.url.length > 5);
+    }
+
+    function buildTitleRegex(title) {
+      const cleaned = title.toLowerCase().replace(/[''':!?,.()\[\]]/g, '').replace(/\s+/g, ' ').trim();
+      const words = cleaned.split(' ').filter(w => w.length > 0);
+      const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      const pattern = escaped.join('[-_.\\s]');
+      const rightBoundary = '(?=[/_.\\s]|$|\\d|(?=-(?:s\\d{1,2}e?\\d*|\\d{4}|ep\\d|season\\d)))';
+      return new RegExp('(?:^|[/_.\\s])' + pattern + rightBoundary, 'i');
+    }
+
+    function searchByImdbId(allLinks, imdbID) {
+      const id = imdbID.toLowerCase();
+      return allLinks.filter(l => l.url.toLowerCase().includes(id) || l.text.toLowerCase().includes(id));
+    }
+
+    function searchByTitleOnly(allLinks, title) {
+      const rx = buildTitleRegex(title);
+      return allLinks.filter(l => rx.test(l.url) || rx.test(l.text));
+    }
+
+    function searchByBothStrict(allLinks, title, imdbID) {
+      const id  = imdbID.toLowerCase();
+      const rx  = buildTitleRegex(title);
+      return allLinks.filter(l => {
+        const urlLow  = l.url.toLowerCase();
+        const textLow = l.text.toLowerCase();
+        const hasId = urlLow.includes(id) || textLow.includes(id);
+        const hasTitle = rx.test(l.url) || rx.test(l.text);
+        return hasId && hasTitle;
+      });
+    }
+
+    // AI‑powered link search (now uses AvalAI via callAIAPI)
     async function searchWithAI(item, allLinks) {
       const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
       const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title — not related titles or spin-offs. For TV series include only season/episode links for THIS show. If nothing matches, output NONE. Output indices or NONE only — no explanation.`;
       const userText = `Find links for:\nTitle: "${item.title}"\nIMDb ID: ${item.id}\nYear: ${item.year}\nType: ${item.type === 'series' ? 'TV Series' : 'Movie'}\n\nLinks:\n${linkList}`;
       try {
-        const responseText = await callGroqAPI(systemPrompt, userText);
+        const responseText = await callAIAPI(systemPrompt, userText);
         const answer = responseText.trim();
         if (/^none$/i.test(answer) || answer === '') return [];
         const indices = answer.split(/[\s,،]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0 && n < allLinks.length);
@@ -947,7 +913,7 @@
       return null;
     }
 
-    // --- FIXED ORDER: Stage 1 ID, Stage 2 ID+Title, Stage 3 Title only, Stage 4 AI ---
+    // ==================== FIXED LINK EXTRACTION ORDER ====================
     async function matchAndExtractLinks(imdbID) {
       const item = state.items.find(i => i.id === imdbID);
       const resultsDiv = document.getElementById("archiveMatchResults");
@@ -965,17 +931,17 @@
       const allLinks = getAllArchiveLinks();
       let matches = [];
 
-      // Stage 1: IMDb ID only
+      // Stage 1: IMDb ID
       stageMsg('۱', `جستجو با کد IMDb: ${imdbID}`);
       await tick();
       matches = searchByImdbId(allLinks, imdbID);
       if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🆔 یافت‌شده با کد IMDb: <b>${imdbID}</b>`);
 
-      // Stage 2: Combined (IMDb + Title)
+      // Stage 2: Combined (ID + Title)
       stageMsg('۲', 'جستجوی ترکیبی — تطابق هم‌زمان کد و نام');
       await tick();
       matches = searchByBothStrict(allLinks, item.title, imdbID);
-      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 یافت‌شده با تطابق ترکیبی (کد + نام)`);
+      if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤+🆔 یافت‌شده با تطابق ترکیبی`);
 
       // Stage 3: Title only
       stageMsg('۳', `جستجو با نام دقیق: ${item.title}`);
@@ -983,8 +949,8 @@
       matches = searchByTitleOnly(allLinks, item.title);
       if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤 یافت‌شده با نام: <b>${item.title}</b>`);
 
-      // Stage 4: AI
-      stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با موتور هوشمند ابری...');
+      // Stage 4: AI (via AvalAI)
+      stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با هوش مصنوعی...');
       await tick();
       const aiResult = await searchWithAI(item, allLinks);
       if (aiResult === null) {
@@ -1042,9 +1008,6 @@
           dubbedLinks.forEach(m => { const q = cleanQualityStr(m.text || m.url); const s = extractFileSize(m.text || m.url); html += `<a href="${m.url}" target="_blank" class="movie-quality-line">📥 ${s ? q + ' / ' + s : q}</a>`; });
           html += `</div>`;
         }
-        if (!softSubLinks.length && !dubbedLinks.length) {
-          matches.forEach(m => { html += `<a href="${m.url}" target="_blank" class="movie-quality-line">📥 ${m.text || m.url}</a>`; });
-        }
       } else {
         function renderSeriesGroup(linkArray, label, blockClass) {
           if (!linkArray.length) return "";
@@ -1057,30 +1020,28 @@
             (seasons[s] = seasons[s] || []).push(m);
           });
           let out = `<div><div class="quality-block-title ${blockClass}">${label}</div>`;
-          Object.keys(seasons).map(Number).sort((a, b) => a - b).forEach(sn => {
-              out += `<div class="series-season-container"><div class="series-season-title">Season ${sn}</div><div class="series-qualities-row">`;
-              out += seasons[sn].map(m => `<a href="${m.url}" target="_blank">📥 ${cleanQualityStr(m.text || m.url)}</a>`).join(' / ');
-              out += `</div></div>`;
-            });
+          Object.keys(seasons).map(Number).sort((a,b)=>a-b).forEach(sn => {
+            out += `<div class="series-season-container"><div class="series-season-title">Season ${sn}</div><div class="series-qualities-row">`;
+            out += seasons[sn].map(m => `<a href="${m.url}" target="_blank">📥 ${cleanQualityStr(m.text || m.url)}</a>`).join(' / ');
+            out += `</div></div>`;
+          });
           out += `</div>`;
           return out;
         }
         html += renderSeriesGroup(softSubLinks, "SoftSub", "softsub");
         html += renderSeriesGroup(dubbedLinks,  "Dubbed",  "dubbed");
-        if (!softSubLinks.length && !dubbedLinks.length) {
-          matches.forEach(m => { html += `<a href="${m.url}" target="_blank" class="movie-quality-line">📥 ${m.text || m.url}</a>`; });
-        }
       }
       html += `</div>`;
       resultsDiv.innerHTML = html;
     }
 
+    // ==================== SPEECH RECOGNITION ====================
     function initSpeechRecognition() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
         recognition = new SpeechRecognition();
         recognition.continuous = false;
-        recognition.lang = 'fa-IR'; // may fallback to browser's default if not supported
+        recognition.lang = 'fa-IR';
         recognition.interimResults = false;
         recognition.onresult = function(event) {
           const textarea = document.getElementById("audioReviewTextarea");
@@ -1090,8 +1051,8 @@
           }
           setRecordingState(false);
         };
-        recognition.onerror = function() { setRecordingState(false); };
-        recognition.onend = function() { setRecordingState(false); };
+        recognition.onerror = () => setRecordingState(false);
+        recognition.onend = () => setRecordingState(false);
       }
     }
 
@@ -1114,14 +1075,15 @@
       localStorage.setItem("cinetrack_audio_reviews", JSON.stringify(state.audioReviews));
     }
 
+    // ==================== PLOT TRANSLATION (via AvalAI) ====================
     async function translatePlotInline(id) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
       const plotEl = document.getElementById(`plot_wrapper_${id}`);
-      if (plotEl) plotEl.innerHTML = `<span style="color:var(--cyan); font-weight:600;">⏳ در حال ترجمه داستان به فارسی...</span>`;
+      if (plotEl) plotEl.innerHTML = `<span style="color:var(--cyan);">⏳ در حال ترجمه...</span>`;
       const sysPrompt = "You are an expert movie translator. Translate the following English movie plot into natural, fluent Persian (Farsi). Output ONLY the translation.";
       try {
-        const translatedText = await callGroqAPI(sysPrompt, item.plot);
+        const translatedText = await callAIAPI(sysPrompt, item.plot);
         if (translatedText) {
           item.plotFa = translatedText.trim();
           saveStateToStorage(); renderHero();
@@ -1148,7 +1110,6 @@
       const container = document.getElementById("progressModalContent");
       container.innerHTML = `
         <input type="hidden" id="progressManageId" value="${item.id}">
-        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:18px;">* نیازی به وارد کردن اطلاعات تمامی فصول نیست.</p>
         <div class="form-row">
           <div class="form-group"><label>فصل جاری:</label><input type="number" id="progressManageSeason" class="form-control" value="${item.season || 1}" min="1" max="${item.totalSeasons || 50}"></div>
           <div class="form-group"><label>قسمت جاری:</label><input type="number" id="progressManageEpisode" class="form-control" value="${item.episode || 1}" min="1"></div>
@@ -1159,7 +1120,7 @@
     }
 
     function saveQuickProgress() {
-      const id   = document.getElementById("progressManageId").value;
+      const id = document.getElementById("progressManageId").value;
       const item = state.items.find(i => i.id === id);
       if (!item) return;
       let season  = parseInt(document.getElementById("progressManageSeason").value)  || 1;
@@ -1168,8 +1129,8 @@
       if (season < 1) season = 1;
       if (season > totalSeasons) season = totalSeasons;
       if (episode < 1) episode = 1;
-      item.season      = season;
-      item.episode     = episode;
+      item.season = season;
+      item.episode = episode;
       item.lastUpdated = new Date().toISOString();
       saveStateToStorage(); closeModal("progressModal"); renderHero(); renderGrid();
     }
@@ -1178,18 +1139,18 @@
       const container = document.getElementById("heroSection");
       if (!state.selectedId || state.items.length === 0) {
         const nextUp = getTopWatchNext();
-        if (nextUp) { state.selectedId = nextUp.id; }
+        if (nextUp) state.selectedId = nextUp.id;
         else { container.innerHTML = `<div class="hero-empty"><span style="font-size:42px;">🎬</span><p>فیلم یا سریالی را جستجو و انتخاب کنید.</p></div>`; return; }
       }
       const item = state.items.find(i => i.id === state.selectedId);
       if (!item) return;
-      const isSeries      = item.type === 'series';
-      const progressPct   = getProgressPercent(item);
-      const savedReview   = state.audioReviews[item.id] || "";
+      const isSeries    = item.type === 'series';
+      const progressPct = getProgressPercent(item);
+      const savedReview = state.audioReviews[item.id] || "";
       let displayPlot = item.plot;
       if (state.uiLanguage === 'fa') {
         if (item.plotFa) displayPlot = item.plotFa;
-        else displayPlot = `<div id="plot_wrapper_${item.id}"><span style="color:var(--text-secondary);font-size:14px;display:block;margin-bottom:10px;">خلاصه داستان به فارسی موجود نیست.</span><button class="btn btn-secondary" onclick="translatePlotInline('${item.id}')">✨ ترجمه با AI</button></div>`;
+        else displayPlot = `<div id="plot_wrapper_${item.id}"><span style="color:var(--text-secondary);font-size:14px;display:block;margin-bottom:10px;">خلاصه داستان فارسی موجود نیست.</span><button class="btn btn-secondary" onclick="translatePlotInline('${item.id}')">✨ ترجمه با AI</button></div>`;
       }
       container.innerHTML = `
         <div class="hero-content">
@@ -1210,7 +1171,7 @@
               <div class="extended-row"><strong>🆔 IMDb ID:</strong> <span style="font-family:monospace;font-size:13px;background:rgba(255,255,255,0.05);padding:4px 10px;border-radius:8px;border:1px solid var(--glass-border);color:var(--cyan);">${item.id}</span></div>
             </div>
             <div class="hero-plot">${displayPlot}</div>
-            ${isSeries ? `<div class="episode-progress-block"><div class="episode-progress-header"><span class="episode-progress-title">🍿 پیشرفت تماشا (فصل‌ها: ${item.totalSeasons || '?'})</span><span class="episode-progress-count">فصل ${item.season}، قسمت ${item.episode}</span></div><div class="progress-container"><div class="progress-bar" style="width:${progressPct}%"></div></div><div style="text-align:left;font-size:12px;color:var(--text-secondary);margin-top:6px;">${progressPct}% تکمیل</div></div>` : ''}
+            ${isSeries ? `<div class="episode-progress-block"><div class="episode-progress-header"><span class="episode-progress-title">🍿 پیشرفت تماشا</span><span class="episode-progress-count">فصل ${item.season}، قسمت ${item.episode}</span></div><div class="progress-container"><div class="progress-bar" style="width:${progressPct}%"></div></div><div style="text-align:left;font-size:12px;color:var(--text-secondary);margin-top:6px;">${progressPct}% تکمیل</div></div>` : ''}
             <div id="archiveMatchResults" style="margin-top:20px;margin-bottom:20px;"></div>
             <div id="aiSimilarRecommendations" style="margin-top:20px;margin-bottom:20px;background:rgba(96,165,250,0.05);border:1px dashed rgba(96,165,250,0.3);padding:18px;border-radius:12px;display:none;"></div>
             <div class="audio-review-block">
@@ -1222,7 +1183,7 @@
             </div>
             <div class="hero-actions">
               <button class="btn btn-stream" onclick="matchAndExtractLinks('${item.id}')">🔍 استخراج لینک‌ها</button>
-              <button class="btn btn-stream-next" onclick="generateSimilarRecommendations('${item.id}')">🤖 پیشنهاد مشابه AI</button>
+              <button class="btn btn-stream-next" onclick="generateSimilarRecommendations('${item.id}')">🤖 پیشنهاد مشابه</button>
               ${isSeries ? `<button class="btn btn-secondary" onclick="openManageProgressModal('${item.id}')">⚙️ تغییر قسمت</button>` : ''}
               <button class="btn btn-delete" onclick="deleteItem('${item.id}')">🗑️ حذف</button>
             </div>
@@ -1233,8 +1194,8 @@
     function renderDashboard() {
       const container = document.getElementById("dashboardStats");
       if (!container) return;
-      const total     = state.items.length;
-      const watching  = state.items.filter(i => i.status === "Watching").length;
+      const total = state.items.length;
+      const watching = state.items.filter(i => i.status === "Watching").length;
       const completed = state.items.filter(i => i.status === "Completed").length;
       let totalImdb = 0, imdbCount = 0;
       state.items.forEach(i => { let p = parseFloat(i.imdbRating); if (!isNaN(p)) { totalImdb += p; imdbCount++; } });
@@ -1244,28 +1205,29 @@
       const userAvg = urCount > 0 ? (totalUR / urCount).toFixed(1) : "0.0";
       let genreFreq = {};
       state.items.forEach(i => { if (i.genre && i.genre !== "N/A") i.genre.split(",").forEach(g => { let cg = g.trim(); genreFreq[cg] = (genreFreq[cg] || 0) + 1; }); });
-      let favoriteGenre = "نامشخص", maxCount = 0;
-      for (let g in genreFreq) { if (genreFreq[g] > maxCount) { maxCount = genreFreq[g]; favoriteGenre = g; } }
+      let favGenre = "نامشخص", max = 0;
+      for (let g in genreFreq) { if (genreFreq[g] > max) { max = genreFreq[g]; favGenre = g; } }
       container.innerHTML = `
         <div class="stat-card"><h3>${total}</h3><p>کل عناوین</p></div>
         <div class="stat-card"><h3>${watching}</h3><p>⏳ در حال تماشا</p></div>
         <div class="stat-card"><h3>${completed}</h3><p>✅ تمام شده</p></div>
         <div class="stat-card"><h3>⭐ ${imdbAvg}</h3><p>میانگین IMDb</p></div>
         <div class="stat-card"><h3>★ ${userAvg}</h3><p>میانگین امتیازهای من</p></div>
-        <div class="stat-card"><h3 style="font-size:16px;color:var(--cyan);">${favoriteGenre}</h3><p>🎭 ژانر محبوب</p></div>`;
+        <div class="stat-card"><h3 style="font-size:16px;color:var(--cyan);">${favGenre}</h3><p>🎭 ژانر محبوب</p></div>`;
     }
 
+    // ==================== AI RECOMMENDATIONS (via AvalAI) ====================
     async function generateSimilarRecommendations(id) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
       const responseBox = document.getElementById("aiSimilarRecommendations"); if (!responseBox) return;
       responseBox.style.display = "block";
       responseBox.innerHTML = `<span style="color:var(--cyan);">⏳ در حال تحلیل...</span>`;
-      const sysPrompt = `You are CineTrack AI Assistant. Recommend 5 movies or TV shows closely similar to the user's selected title. SPEAK STRICTLY IN PERSIAN (FARSI). Do not use English text. Use emojis and bullet points.`;
+      const sysPrompt = `You are CineTrack AI. Recommend 5 movies or TV shows similar to the user's title. STRICTLY in Persian (Farsi). Use emojis and bullet points.`;
       const userText = `Title: "${item.title}". Type: ${item.type}. Genre: ${item.genre}. Plot: ${item.plot}. Give 5 recommendations.`;
       try {
-        const analysis = await callGroqAPI(sysPrompt, userText);
-        responseBox.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h4 style="font-size:15px;font-weight:800;">🤖 عناوین مشابه (تحلیل AI)</h4><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="document.getElementById('aiSimilarRecommendations').style.display='none'">✖</button></div><div style="font-size:14px;line-height:1.9;white-space:pre-wrap;">${sanitizeAIResponse(analysis)}</div>`;
+        const analysis = await callAIAPI(sysPrompt, userText);
+        responseBox.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:12px;"><h4 style="font-size:15px;font-weight:800;">🤖 عناوین مشابه</h4><button class="btn btn-secondary" style="padding:2px 8px;font-size:11px;" onclick="document.getElementById('aiSimilarRecommendations').style.display='none'">✖</button></div><div style="font-size:14px;line-height:1.9;white-space:pre-wrap;">${sanitizeAIResponse(analysis)}</div>`;
       } catch (err) {
         responseBox.innerHTML = `<span style="color:#ef4444;">خطا: ${err.message}</span>`;
       }
@@ -1276,15 +1238,15 @@
         document.getElementById("globalAiResponse").innerHTML = state.globalAiCache;
         return;
       }
-      const btn         = document.querySelector(".ai-global-panel .btn");
+      const btn = document.querySelector(".ai-global-panel .btn");
       const responseBox = document.getElementById("globalAiResponse");
       btn.disabled = true;
-      responseBox.innerText = "⏳ در حال آنالیز آماری آرشیو...";
+      responseBox.innerText = "⏳ در حال آنالیز...";
       const safeData = state.items.map(i => ({ title: i.title, type: i.type, genre: i.genre, rating: i.imdbRating }));
-      const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. Give highly personalized structural feedback STRICTLY IN PERSIAN (FARSI). NEVER write in English. Highlight patterns, favorite genres, and suggest missing masterpieces. Use beautiful formatting with emojis.`;
+      const sysPrompt = `You are CineTrack AI Brain. Analyze the user's media collection. STRICTLY in Persian (Farsi). Highlight patterns, favorite genres, and suggest missing masterpieces. Use beautiful formatting with emojis.`;
       try {
-        const analysis = await callGroqAPI(sysPrompt, JSON.stringify(safeData));
-        const sanitized = sanitizeAIResponse(analysis); // store sanitized version
+        const analysis = await callAIAPI(sysPrompt, JSON.stringify(safeData));
+        const sanitized = sanitizeAIResponse(analysis);
         state.globalAiCache = sanitized;
         localStorage.setItem("cinetrack_global_ai_cache", sanitized);
         responseBox.innerHTML = sanitized;
@@ -1296,6 +1258,7 @@
       }
     }
 
+    // ==================== IMPORT / EXPORT ====================
     function exportLibrary() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.items, null, 2));
       const dlAnchor = document.createElement('a'); dlAnchor.setAttribute("href", dataStr); dlAnchor.setAttribute("download", `cinetrack_library.json`); document.body.appendChild(dlAnchor); dlAnchor.click(); dlAnchor.remove();
@@ -1305,7 +1268,7 @@
       const file = event.target.files[0]; if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
-        try { const parsed = JSON.parse(e.target.result); if (Array.isArray(parsed)) { state.items = parsed; saveStateToStorage(); init(); alert("بکاپ با موفقیت بارگذاری شد."); } } catch (err) { alert("فایل نامعتبر."); }
+        try { const parsed = JSON.parse(e.target.result); if (Array.isArray(parsed)) { state.items = parsed; saveStateToStorage(); init(); alert("بکاپ بارگذاری شد."); } } catch (err) { alert("فایل نامعتبر."); }
       };
       reader.readAsText(file);
     }
@@ -1315,14 +1278,31 @@
     function openSettingsModal() { document.getElementById("settingsModal").classList.add("active"); }
 
     function saveSettings() {
-      const lang  = document.getElementById("uiLanguageSetting").value;
+      const lang = document.getElementById("uiLanguageSetting").value;
       state.uiLanguage = lang;
       localStorage.setItem("cinetrack_ui_lang", lang);
       alert("تنظیمات ذخیره شد.");
-      closeModal('settingsModal'); renderHero(); renderWatchNext();
+      closeModal('settingsModal'); renderHero();
     }
 
     function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+
+    // ==================== INIT ====================
+    async function init() {
+      state.archiveHtmlSource = await loadArchiveFromDB();
+      renderDashboard(); extractAndRenderGenres(); renderGrid(); renderHero();
+      setupFilterButtonsUI(); renderWatchNext(); initSpeechRecognition();
+
+      document.getElementById("uiLanguageSetting").value = state.uiLanguage;
+      if (state.archiveHtmlSource) {
+        document.getElementById("archiveUploadStatus").innerText = "✅ فایل آرشیو بارگذاری شد.";
+      }
+      document.getElementById("generalNotesTextArea").value = localStorage.getItem("cinetrack_general_notes") || "";
+      if (state.globalAiCache) {
+        document.getElementById("globalAiResponse").innerHTML = state.globalAiCache;
+        document.getElementById("regenGlobalAiBtn").style.display = "inline-flex";
+      }
+    }
 
     window.onload = init;
   </script>
