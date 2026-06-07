@@ -559,11 +559,10 @@
           tx.oncomplete = resolve;
           tx.onerror = () => reject(tx.error);
         });
-      } catch (e) {
-        console.error("IndexedDB Save Error:", e);
-        throw e;   // re-throw so caller knows
-      }
-    }
+        } catch (e) {
+    console.error("IndexedDB Save Error:", e);
+    throw e;   // <-- add this line
+  }
 
     async function loadArchiveFromDB() {
       try {
@@ -1073,33 +1072,33 @@
 
     // ==================== FIXED ARCHIVE UPLOAD ====================
     function handleArchiveHtmlUpload(event) {
-      const file = event.target.files[0];
-      const statusEl = document.getElementById("archiveUploadStatus");
-      if (!file) {
-        statusEl.innerText = "⚠️ فایلی انتخاب نشده است.";
-        return;
-      }
-      statusEl.innerText = "⏳ در حال پردازش فایل...";
-      const reader = new FileReader();
-      reader.onload = async function(e) {
-        try {
-          const rawText = e.target.result;
-          await saveArchiveToDB(rawText);
-          state.archiveHtmlSource = rawText;
-          statusEl.innerText = "✅ فایل آرشیو با موفقیت ذخیره شد: " + file.name;
-          alert("سورس آرشیو با موفقیت ذخیره شد.");
-          if (state.selectedId) renderHero();
-        } catch (err) {
-          console.error(err);
-          statusEl.innerText = "❌ خطا در ذخیره فایل: " + err.message;
-          alert("خطا در ذخیره فایل آرشیو. لطفاً مرورگر خود را بررسی کنید (IndexedDB ممکن است غیرفعال باشد).");
-        }
-      };
-      reader.onerror = function() {
-        statusEl.innerText = "❌ خطا در خواندن فایل.";
-      };
-      reader.readAsText(file);
+  const file = event.target.files[0];
+  const statusEl = document.getElementById("archiveUploadStatus");
+  if (!file) {
+    statusEl.innerText = "⚠️ فایلی انتخاب نشده است.";
+    return;
+  }
+  statusEl.innerText = "⏳ در حال پردازش فایل...";
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const rawText = e.target.result;
+      await saveArchiveToDB(rawText);          // now throws on error
+      state.archiveHtmlSource = rawText;       // set the source!
+      statusEl.innerText = "✅ فایل آرشیو با موفقیت ذخیره شد: " + file.name;
+      alert("سورس آرشیو با موفقیت ذخیره شد.");
+      if (state.selectedId) renderHero();      // refresh hero if an item is selected
+    } catch (err) {
+      console.error(err);
+      statusEl.innerText = "❌ خطا در ذخیره فایل: " + err.message;
+      alert("خطا در ذخیره فایل آرشیو. IndexedDB ممکن است غیرفعال باشد.");
     }
+  };
+  reader.onerror = function() {
+    statusEl.innerText = "❌ خطا در خواندن فایل.";
+  };
+  reader.readAsText(file);
+}
 
     // ==================== SAVE SETTINGS (no change) ====================
     // ... etc.
