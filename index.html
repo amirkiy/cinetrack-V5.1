@@ -308,6 +308,46 @@
     }
     .load-more-btn:hover { background: rgba(255,255,255,0.08); }
 
+    /* Floating Chat Button */
+    .floating-chat-btn {
+      position: fixed; bottom: 30px; right: 30px; z-index: 400;
+      width: 60px; height: 60px; border-radius: 50%; background: var(--accent);
+      box-shadow: 0 8px 24px rgba(255,77,106,0.4); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 28px; color: white;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .floating-chat-btn:hover { transform: scale(1.1); box-shadow: 0 12px 32px rgba(255,77,106,0.6); }
+
+    /* Chat Modal Specifics */
+    .chat-container {
+      display: flex; flex-direction: column; height: 60vh; min-height: 300px;
+    }
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .chat-message {
+      max-width: 80%; padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.6;
+      white-space: pre-wrap; word-wrap: break-word;
+    }
+    .chat-message.user {
+      align-self: flex-end; background: var(--accent); color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-message.assistant {
+      align-self: flex-start; background: rgba(255,255,255,0.08); color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+    }
+    .chat-input-area {
+      display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid var(--glass-border); padding-top: 15px;
+    }
+    .chat-input-area textarea {
+      flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+      border-radius: 12px; padding: 12px; color: var(--text-primary); resize: none;
+      font-family: inherit; font-size: 13px; outline: none; min-height: 44px; max-height: 100px;
+    }
+    .chat-input-area textarea:focus { border-color: var(--cyan); }
+    .chat-send-btn { align-self: flex-end; }
+
     @media (max-width: 768px) {
       .hero-content { flex-direction: column; align-items: center; }
       .controls-bar { flex-direction: column; align-items: stretch; }
@@ -454,17 +494,36 @@
     </div>
   </div>
 
+  <!-- Chat Modal -->
+  <div class="modal-backdrop" id="chatModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size:18px; font-weight:800;">💬 دستیار هوش مصنوعی</h3>
+        <button class="btn btn-secondary" style="padding:4px 10px;" onclick="closeModal('chatModal')">✖</button>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-message assistant">سلام! من دستیار CineTrack هستم. می‌تونم بر اساس کتابخانه‌ات بهت فیلم پیشنهاد بدم یا درمورد هر فیلمی سوال کنی. 😊</div>
+        </div>
+        <div class="chat-input-area">
+          <textarea id="chatInput" rows="1" placeholder="پیام خود را بنویسید..." onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendChatMessage();}"></textarea>
+          <button class="btn chat-send-btn" onclick="sendChatMessage()">📨 ارسال</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Chat Button -->
+  <button class="floating-chat-btn" onclick="openChatModal()" title="چت با هوش مصنوعی">💬</button>
+
   <script>
     // ==================== API CONFIGURATION ====================
-    const OMDB_KEY = "4b0254f3";  // OMDb API key
+    const OMDB_KEY = "4b0254f3";
 
     // 🧠 AI Configuration – Use AvalAI (or any OpenAI-compatible API)
-    // 1. Get your API key from avalai.ir (or your provider)
-    // 2. Set the base URL (usually https://api.avalai.ir/v1)
-    // 3. Choose a model (e.g., gpt-3.5-turbo, gpt-4, or a Persian model)
     const AI_API_BASE = "https://api.avalai.ir/v1";   // <-- CHANGE TO YOUR AVALAI ENDPOINT
-    const AI_API_KEY  = "aa-Guxnyo16ZkqRGPoFYUC5gD4JCs1BKPXyiL1BFEeAluA2guzl";   // <-- REPLACE WITH YOUR KEY
-    const AI_MODEL    = "gpt-5.4-mini";              // <-- MODEL NAME FROM AVALAI
+    const AI_API_KEY  = "your-avalai-api-key-here";   // <-- REPLACE WITH YOUR KEY
+    const AI_MODEL    = "gpt-3.5-turbo";              // <-- MODEL NAME FROM AVALAI
 
     // ==================== IndexedDB ====================
     const DB_NAME = 'CineTrackDB';
@@ -519,7 +578,8 @@
       globalAiCache: localStorage.getItem("cinetrack_global_ai_cache") || "",
       archiveHtmlSource: "",
       audioReviews: JSON.parse(localStorage.getItem("cinetrack_audio_reviews") || "{}"),
-      uiLanguage: localStorage.getItem("cinetrack_ui_lang") || "en"
+      uiLanguage: localStorage.getItem("cinetrack_ui_lang") || "en",
+      chatHistory: JSON.parse(localStorage.getItem("cinetrack_chat_history") || '[{"role":"assistant","content":"سلام! من دستیار CineTrack هستم. می‌تونم بر اساس کتابخانه‌ات بهت فیلم پیشنهاد بدم یا درمورد هر فیلمی سوال کنی. 😊"}]')
     };
 
     let searchDebounceTimer;
@@ -546,9 +606,9 @@
     // ==================== AVALAI (OPENAI-COMPATIBLE) API CALL ====================
     async function callAIAPI(systemPrompt, userText) {
       const key = AI_API_KEY.trim();
-      const baseUrl = AI_API_BASE.replace(/\/+$/, ""); // remove trailing slashes
+      const baseUrl = AI_API_BASE.replace(/\/+$/, "");
       if (!key || key === "your-avalai-api-key-here") {
-        throw new Error("⚠️ لطفاً کلید API آوالای (AvalAI) را در متغیر AI_API_KEY تنظیم کنید.");
+        throw new Error("⚠️ لطفاً کلید API آوالای را در متغیر AI_API_KEY تنظیم کنید.");
       }
       const url = `${baseUrl}/chat/completions`;
       const payload = {
@@ -557,7 +617,7 @@
           { role: "system", content: systemPrompt },
           { role: "user", content: userText }
         ],
-        temperature: 0.4
+        temperature: 0.7   // slightly higher for chat
       };
       const res = await fetch(url, {
         method: "POST",
@@ -577,7 +637,7 @@
       return data.choices[0].message.content;
     }
 
-    // ==================== OMDB SEARCH (with abort) ====================
+    // ==================== OMDB SEARCH ====================
     async function performSearch(query, page = 1, signal) {
       try {
         const res = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_KEY}&s=${encodeURIComponent(query)}&page=${page}`, { signal });
@@ -856,7 +916,7 @@
       container.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;cursor:pointer;" onclick="selectGridItem('${top.id}')"><div style="display:flex;align-items:center;gap:16px;"><img src="${top.poster !== 'N/A' ? top.poster : 'https://via.placeholder.com/50x70?text=No'}" style="width:40px;height:55px;object-fit:cover;border-radius:8px;border:1px solid var(--glass-border);"><div><h4 style="font-weight:700;font-size:15px;">${top.title}</h4><p style="font-size:13px;color:var(--text-secondary);margin-top:4px;">وضعیت: ${translateStatus(top.status)} | ⭐ IMDb: ${top.imdbRating}</p></div></div><button class="btn btn-secondary" style="font-size:13px;padding:8px 16px;">🎯 تمرکز روی این عنوان</button></div>`;
     }
 
-    // ==================== ARCHIVE LINK SEARCH FUNCTIONS ====================
+    // ==================== ARCHIVE LINK SEARCH ====================
     function getAllArchiveLinks() {
       if (!state.archiveHtmlSource) return [];
       const parser = new DOMParser();
@@ -898,7 +958,6 @@
       });
     }
 
-    // AI‑powered link search (now uses AvalAI via callAIAPI)
     async function searchWithAI(item, allLinks) {
       const linkList = allLinks.slice(0, 500).map((l, i) => `${i}: [${l.text.slice(0, 80)}] ${l.url.slice(0, 150)}`).join('\n');
       const systemPrompt = `You are a precise download-link matcher. Given a numbered list of archive links and a title with its IMDb ID, return ONLY the comma-separated indices of links that belong EXACTLY to this title — not related titles or spin-offs. For TV series include only season/episode links for THIS show. If nothing matches, output NONE. Output indices or NONE only — no explanation.`;
@@ -913,14 +972,13 @@
       return null;
     }
 
-    // ==================== FIXED LINK EXTRACTION ORDER ====================
     async function matchAndExtractLinks(imdbID) {
       const item = state.items.find(i => i.id === imdbID);
       const resultsDiv = document.getElementById("archiveMatchResults");
       if (!resultsDiv) return;
 
       if (!state.archiveHtmlSource) {
-        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:14px;color:#ef4444;">⚠️ فایل آرشیو بارگذاری نشده است. در تنظیمات فایل HTML آرشیو را آپلود کنید.</div>`;
+        resultsDiv.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid #f87171;padding:15px;border-radius:12px;font-size:14px;color:#ef4444;">⚠️ فایل آرشیو بارگذاری نشده است.</div>`;
         return;
       }
 
@@ -937,7 +995,7 @@
       matches = searchByImdbId(allLinks, imdbID);
       if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🆔 یافت‌شده با کد IMDb: <b>${imdbID}</b>`);
 
-      // Stage 2: Combined (ID + Title)
+      // Stage 2: Combined
       stageMsg('۲', 'جستجوی ترکیبی — تطابق هم‌زمان کد و نام');
       await tick();
       matches = searchByBothStrict(allLinks, item.title, imdbID);
@@ -949,7 +1007,7 @@
       matches = searchByTitleOnly(allLinks, item.title);
       if (matches.length > 0) return renderExtractedLinks(matches, item, resultsDiv, `🔤 یافت‌شده با نام: <b>${item.title}</b>`);
 
-      // Stage 4: AI (via AvalAI)
+      // Stage 4: AI
       stageMsg('۴', 'هیچ نتیجه‌ای یافت نشد — مشورت با هوش مصنوعی...');
       await tick();
       const aiResult = await searchWithAI(item, allLinks);
@@ -1075,7 +1133,6 @@
       localStorage.setItem("cinetrack_audio_reviews", JSON.stringify(state.audioReviews));
     }
 
-    // ==================== PLOT TRANSLATION (via AvalAI) ====================
     async function translatePlotInline(id) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
@@ -1216,7 +1273,6 @@
         <div class="stat-card"><h3 style="font-size:16px;color:var(--cyan);">${favGenre}</h3><p>🎭 ژانر محبوب</p></div>`;
     }
 
-    // ==================== AI RECOMMENDATIONS (via AvalAI) ====================
     async function generateSimilarRecommendations(id) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
@@ -1258,6 +1314,106 @@
       }
     }
 
+    // ==================== CHAT FUNCTIONALITY ====================
+    function openChatModal() {
+      document.getElementById("chatModal").classList.add("active");
+      renderChatHistory();
+      document.getElementById("chatInput").focus();
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+
+    function renderChatHistory() {
+      const container = document.getElementById("chatMessages");
+      container.innerHTML = state.chatHistory.map(msg => {
+        const roleClass = msg.role === 'user' ? 'user' : 'assistant';
+        return `<div class="chat-message ${roleClass}">${sanitizeAIResponse(msg.content)}</div>`;
+      }).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById("chatInput");
+      const message = input.value.trim();
+      if (!message) return;
+      
+      // Add user message
+      state.chatHistory.push({ role: "user", content: message });
+      renderChatHistory();
+      input.value = "";
+      input.style.height = 'auto'; // reset height
+
+      // Show thinking indicator
+      const thinkingDiv = document.createElement("div");
+      thinkingDiv.className = "chat-message assistant";
+      thinkingDiv.innerHTML = "⏳";
+      document.getElementById("chatMessages").appendChild(thinkingDiv);
+      document.getElementById("chatMessages").scrollTop = document.getElementById("chatMessages").scrollHeight;
+
+      // Prepare system prompt with user's library
+      const libraryInfo = state.items.length > 0 ?
+        state.items.map(i => `- ${i.title} (${i.year}) | نوع: ${i.type} | IMDb: ${i.imdbRating} | امتیاز شما: ${i.userRating} | ژانر: ${i.genre}`).join("\n")
+        : "کتابخانه خالی است.";
+      
+      const systemPrompt = `شما دستیار هوشمند CineTrack هستید. شما به اطلاعات کتابخانه فیلم کاربر دسترسی دارید (در زیر). با استفاده از این اطلاعات و دانش سینمایی خود، به سوالات پاسخ دهید، فیلم پیشنهاد دهید و تحلیل کنید. همیشه فارسی صحبت کنید و از ایموجی استفاده کنید.\n\nکتابخانه کاربر:\n${libraryInfo}`;
+
+      try {
+        // Send to AI along with entire conversation history (excluding the thinking message)
+        const recentHistory = state.chatHistory.slice(-10); // limit context
+        const messages = [
+          { role: "system", content: systemPrompt },
+          ...recentHistory
+        ];
+        // We'll use a dedicated function for chat that sends messages array
+        const assistantReply = await callAIChat(messages);
+        
+        // Remove thinking indicator
+        thinkingDiv.remove();
+        
+        // Add assistant response
+        state.chatHistory.push({ role: "assistant", content: assistantReply });
+        renderChatHistory();
+        saveChatHistory();
+      } catch (err) {
+        thinkingDiv.innerHTML = `<span style="color:#ef4444;">خطا: ${err.message}</span>`;
+      }
+    }
+
+    // Custom chat API call that sends full message array (not just system+user)
+    async function callAIChat(messages) {
+      const key = AI_API_KEY.trim();
+      const baseUrl = AI_API_BASE.replace(/\/+$/, "");
+      if (!key || key === "your-avalai-api-key-here") {
+        throw new Error("⚠️ لطفاً کلید API را تنظیم کنید.");
+      }
+      const url = `${baseUrl}/chat/completions`;
+      const payload = {
+        model: AI_MODEL,
+        messages: messages,
+        temperature: 0.7
+      };
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${key}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (res.status === 401) throw new Error("❌ کلید API نامعتبر است.");
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`خطای HTTP ${res.status}: ${errText.slice(0,100)}`);
+      }
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      return data.choices[0].message.content;
+    }
+
+    function saveChatHistory() {
+      localStorage.setItem("cinetrack_chat_history", JSON.stringify(state.chatHistory));
+    }
+
     // ==================== IMPORT / EXPORT ====================
     function exportLibrary() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.items, null, 2));
@@ -1284,8 +1440,6 @@
       alert("تنظیمات ذخیره شد.");
       closeModal('settingsModal'); renderHero();
     }
-
-    function closeModal(id) { document.getElementById(id).classList.remove("active"); }
 
     // ==================== INIT ====================
     async function init() {
